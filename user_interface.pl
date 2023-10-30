@@ -1,3 +1,11 @@
+/* Board Printing */
+
+% Prints the board and the current player
+print_game_state(PlayerTurn) :-
+    player(PlayerTurn),
+    print_board,
+    nl, write('Current player: '), write(PlayerTurn), nl.
+
 % Prints the board
 print_board :-
     print_rows(1, 14).
@@ -21,5 +29,14 @@ print_row(Row, Col, ColEnd) :-
     print_row(Row, NextCol, ColEnd).
 
 % Define the way a cell is printed
-write_cell(Symbol) :- write('|'), write(Symbol). % Symbol
+write_cell(Symbol) :- write('|'), write(Symbol).
 
+
+/* Communicating with user */
+
+next_turn(Player) :-
+    write('Choose a piece to move:'), nl,
+    read_string(Piece),
+    write('Choose a direction to move:'), nl,
+    read_string(Direction),
+    move_player_piece(Player, Piece, Direction).
