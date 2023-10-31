@@ -36,7 +36,7 @@ write_cell(Symbol) :- write('|'), write(Symbol).
 
 next_turn(Player) :-
     write('Choose a piece to move:'), nl,
-    read_string(Piece),
+    read(Piece),
     write('Choose a direction to move:'), nl,
-    read_string(Direction),
+    read(Direction),
     move_player_piece(Player, Piece, Direction).
