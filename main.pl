@@ -22,3 +22,5 @@ playing(PlayerTurn) :-
     ( PlayerTurn = player1 -> PlayerTurn = player2 ; PlayerTurn = player1 ),
     playing(1, PlayerTurn).
 
+/*acho que estao a jogar 4 vezes*/
+
