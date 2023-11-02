@@ -42,6 +42,7 @@ assert_rock_piece(Piece, Position) :-
     assert(rock_piece(Piece, Position)),
     write('Retracting cell at '), write(RealRow), write(' '), write(RealCol), nl,
     retract_cell(RealRow, RealCol),
+    write('Asserting cell at '), write(RealRow), write(' '), write(RealCol), nl,
     assert_cell(RealRow, RealCol, Piece),
     write('Rock added at '), write(Position), nl,
     findall(Position, rock_piece('_r_', Position), ActualRocks).
@@ -125,13 +126,11 @@ move_rock_until_obstacle(RockPosition, Direction) :-
     check_throw_collision(NewPosition,Result),
     write('Rock moved to '), write(NewPosition), nl,
     ( Result = false ->
-        (    
-        NewPosition = (Row, Col),
-        (Direction = 'up', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Direction = 'down', write('sanity check'),nl, NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Direction = 'left', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol));
-        (Direction = 'right', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol)),
-        assert_rock_piece('_r_', NewPosition)
+        (   
+        write('Rock collided with something!'), nl, 
+        NewRockPosition = (Row, Col),
+        write('row/col/dir'),write(Row), write(Col), write(Direction), nl,
+        assert_rock_piece('_r_', NewRockPosition)
         );
          move_rock_until_obstacle(NewPosition, Direction) ). 
  
