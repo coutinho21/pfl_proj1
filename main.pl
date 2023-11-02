@@ -1,4 +1,4 @@
-?- consult('board.pl'), consult('user_interface.pl'), consult('player_piece.pl').
+?- consult('board.pl'), consult('user_interface.pl'), consult('player_piece.pl'), consult('functions.pl'), consult('utils.pl').
 
 start_game :-
     initialize_board,
