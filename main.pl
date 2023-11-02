@@ -21,5 +21,4 @@ playing(PlayerTurn) :-
     next_turn(PlayerTurn),
     ( PlayerTurn = player1 -> NextPlayer = player2 ; NextPlayer = player1 ),
     playing(NextPlayer).
-/*acho que estao a jogar 4 vezes*/
 
