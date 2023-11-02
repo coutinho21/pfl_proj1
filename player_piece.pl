@@ -5,8 +5,15 @@
 :- dynamic player_piece/3.
 :- dynamic actual_rocks/1.
 
-get_actual_rocks(List) :-
-    actual_rocks(List).
+set_actual_rocks :-
+    findall(Position, rock_piece('_r_', Position), List),
+    assert(actual_rocks(List)),
+    write('not a problem set'), nl.
+
+get_actual_rocks(List):-
+    actual_rocks(List),
+    printlist(List),
+    write('not a problem get'), nl.
 
 
 
@@ -28,9 +35,8 @@ initialize_pieces :-
     assert_rock_piece('_r_', (5, 1)),
     assert_rock_piece('_r_', (5, 9)),
     assert_rock_piece('_r_', (9, 5)),
-    findall(Position, rock_piece('_r_', Position), ActualRocks), 
-    assert(actual_rocks(ActualRocks)),
-    printlist(ActualRocks).
+    set_actual_rocks,
+    get_actual_rocks(ActualRocks).
 
 
 
@@ -38,14 +44,9 @@ assert_rock_piece(Piece, Position) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
-    write('Asserting rock at '), write(RealRow), write(' '), write(RealCol), nl,
     assert(rock_piece(Piece, Position)),
-    write('Retracting cell at '), write(RealRow), write(' '), write(RealCol), nl,
     retract_cell(RealRow, RealCol),
-    write('Asserting cell at '), write(RealRow), write(' '), write(RealCol), nl,
-    assert_cell(RealRow, RealCol, Piece),
-    write('Rock added at '), write(Position), nl,
-    findall(Position, rock_piece('_r_', Position), ActualRocks).
+    assert_cell(RealRow, RealCol, Piece).
 
 assert_player_piece(Player, Piece, Position) :-
     (Row, Col) = Position,
@@ -86,6 +87,7 @@ choose_move(Piece, Row, Col, Position, NewPosition) :-
     ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move( Row, Col, NewPosition)).
 
 tr_move(Row, Col, NewPosition) :-
+    set_actual_rocks,
     get_actual_rocks(ActualRocks),
     write('Choose a direction to move:'), nl,
     read(Direction),
@@ -127,9 +129,8 @@ move_rock_until_obstacle(RockPosition, Direction) :-
     write('Rock moved to '), write(NewPosition), nl,
     ( Result = false ->
         (   
-        write('Rock collided with something!'), nl, 
+
         NewRockPosition = (Row, Col),
-        write('row/col/dir'),write(Row), write(Col), write(Direction), nl,
         assert_rock_piece('_r_', NewRockPosition)
         );
          move_rock_until_obstacle(NewPosition, Direction) ). 
@@ -138,9 +139,7 @@ check_throw_collision(NewPosition, Result) :-
     NewPosition = (Row, Col),
     RealRow is Row + 2,
     RealCol is Col + 2,
-    write('Checking collision with '), write(RealRow), write(' '), write(RealCol), nl,
     cell(RealRow, RealCol, Piece),
-    write('Checking collision with '), write(Piece), nl,
     (member(Piece, ['\\\\\\', '///', '|||','tr1', 'tr2', 'sr1', 'sr2', '_r_']) ->
         write('Rock collided with '), write(Piece), nl, Result = false;
         write('true'),nl, Result = true
