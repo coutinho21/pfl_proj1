@@ -5,16 +5,10 @@
 :- dynamic player_piece/3.
 :- dynamic actual_rocks/1.
 
-set_actual_rocks :-
+set_actual_rocks(List) :-
     findall(Position, rock_piece('_r_', Position), List),
-    assert(actual_rocks(List)),
-    write('not a problem set'), nl.
-
-get_actual_rocks(List):-
-    actual_rocks(List),
-    printlist(List),
-    write('not a problem get'), nl.
-
+    write('not a problem set'), nl,
+    write(List), nl.
 
 
 initialize_players :-
@@ -35,8 +29,7 @@ initialize_pieces :-
     assert_rock_piece('_r_', (5, 1)),
     assert_rock_piece('_r_', (5, 9)),
     assert_rock_piece('_r_', (9, 5)),
-    set_actual_rocks,
-    get_actual_rocks(ActualRocks).
+    set_actual_rocks(ActualRocks).
 
 
 
@@ -47,6 +40,14 @@ assert_rock_piece(Piece, Position) :-
     assert(rock_piece(Piece, Position)),
     retract_cell(RealRow, RealCol),
     assert_cell(RealRow, RealCol, Piece).
+
+retract_rock_piece(Piece, Position) :-
+    retract(rock_piece(Piece, Position)),
+    (Row, Col) = Position,
+    RealRow is Row + 2,
+    RealCol is Col + 2,
+    assert_cell(RealRow, RealCol, '   ').
+    
 
 assert_player_piece(Player, Piece, Position) :-
     (Row, Col) = Position,
@@ -87,8 +88,7 @@ choose_move(Piece, Row, Col, Position, NewPosition) :-
     ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move( Row, Col, NewPosition)).
 
 tr_move(Row, Col, NewPosition) :-
-    set_actual_rocks,
-    get_actual_rocks(ActualRocks),
+    set_actual_rocks(ActualRocks),
     write('Choose a direction to move:'), nl,
     read(Direction),
     (
@@ -105,17 +105,22 @@ tr_move(Row, Col, NewPosition) :-
             read(Answer),
             (
                 (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
-                throw_rock(NewPosition, Answer), assert_rock_piece('_r_', NewPosition)
+                throw_rock(NewPosition, Answer)
             );
             true
         ).
     
 
-throw_rock(RockPosition, Direction) :-  
-    retractall(actual_rocks(_)),
+throw_rock(RockPosition, Direction) :- 
+    write('Rock position: '), write(RockPosition), nl,
+    retract_rock_piece('_r_', RockPosition),
+    findall(Posit, rock_piece('_r_', Posit), Test),
+    write('Test: '), write(Test), nl,
     move_rock_until_obstacle(RockPosition, Direction),
-
+    findall(Posit2, rock_piece('_r_', Posit2), Test2),
+    write('Test: '), write(Test2), nl,
     write('Rock thrown!'), nl.
+
 
 move_rock_until_obstacle(RockPosition, Direction) :-
     RockPosition = (Row, Col),
@@ -131,9 +136,10 @@ move_rock_until_obstacle(RockPosition, Direction) :-
         (   
 
         NewRockPosition = (Row, Col),
+        write('NewRock position: '), write(NewRockPosition), nl,
         assert_rock_piece('_r_', NewRockPosition)
         );
-         move_rock_until_obstacle(NewPosition, Direction) ). 
+        move_rock_until_obstacle(NewPosition, Direction) ). 
  
 check_throw_collision(NewPosition, Result) :-
     NewPosition = (Row, Col),
