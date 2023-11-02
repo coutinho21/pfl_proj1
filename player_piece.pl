@@ -46,6 +46,8 @@ assert_player_piece(Player, Piece, Position) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
+    cell(RealRow, RealCol, Empty),
+    Empty = '   ', % Check if cell is empty
     assert(player_piece(Player, Piece, Position)),
     retract_cell(RealRow, RealCol),
     assert_cell(RealRow, RealCol, Piece).
@@ -61,12 +63,12 @@ retract_player_piece(Player, Piece, Position) :-
 
 
 move_player_piece(Player, Piece) :-
-    player(Player),
-    player_piece(Player, Piece, Position),
+    player(Player), % Check if player exists
+    player_piece(Player, Piece, Position), % Check if player has the piece
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
-    cell(RealRow, RealCol, Piece),
+    cell(RealRow, RealCol, Piece), % Check if piece is in the board
     choose_move(Piece, Position, NewPosition),
     assert_player_piece(Player, Piece, NewPosition).
     
@@ -159,8 +161,4 @@ sr_move(Direction, Row, Col, NewPosition) :-
     (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
     (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
     (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol)).
-
-
-
-
 
