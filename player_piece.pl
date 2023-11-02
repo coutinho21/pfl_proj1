@@ -95,16 +95,16 @@ tr_move(Position, NewPosition) :-
     ).
 
 
-    check_rock_for_throw(NewPosition, ActualRocks) :-
-        ( member(NewPosition, ActualRocks) -> 
-            write('In what direction do you want to throw the rock?'), nl,
-            read(Answer),
-            (
-                (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
-                throw_rock(NewPosition, Answer)
-            );
-            true
-        ).
+check_rock_for_throw(NewPosition, ActualRocks) :-
+    ( member(NewPosition, ActualRocks) -> 
+        write('In what direction do you want to throw the rock?'), nl,
+        read(Answer),
+        (
+            (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
+            throw_rock(NewPosition, Answer)
+        );
+        true 
+    ).
     
 
 throw_rock(RockPosition, Direction) :- 
