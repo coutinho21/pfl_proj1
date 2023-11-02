@@ -7,8 +7,7 @@
 
 set_actual_rocks(List) :-
     findall(Position, rock_piece('_r_', Position), List),
-    write('not a problem set'), nl,
-    write(List), nl.
+
 
 
 initialize_players :-
