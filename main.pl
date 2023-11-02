@@ -1,4 +1,4 @@
-?- consult('board.pl'), consult('user_interface.pl'), consult('player_piece.pl').
+?- consult('board.pl'), consult('user_interface.pl'), consult('player_piece.pl'), consult('functions.pl'), consult('utils.pl').
 
 start_game :-
     initialize_board,
@@ -14,11 +14,12 @@ start_game :-
 % Players have 3 moves
 playing(PlayerTurn) :-
     print_game_state(PlayerTurn),
-    next_turn(player),
+    next_turn(PlayerTurn),
     print_game_state(PlayerTurn),
-    next_turn(player),
+    next_turn(PlayerTurn),
     print_game_state(PlayerTurn),
-    next_turn(player),
-    ( PlayerTurn = player1 -> PlayerTurn = player2 ; PlayerTurn = player1 ),
-    playing(1, PlayerTurn).
+    next_turn(PlayerTurn),
+    ( PlayerTurn = player1 -> NextPlayer = player2 ; NextPlayer = player1 ),
+    playing(NextPlayer).
+/*acho que estao a jogar 4 vezes*/
 
