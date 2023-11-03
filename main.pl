@@ -14,11 +14,19 @@ start_game :-
 % Players have 3 moves
 playing(PlayerTurn) :-
     print_game_state(PlayerTurn),
-    next_turn(PlayerTurn),
+    next_turn(PlayerTurn, NewPlayer),
+    check_turn_change(NewPlayer, PlayerTurn),
     print_game_state(PlayerTurn),
-    next_turn(PlayerTurn),
+    next_turn(PlayerTurn, NewPlayer1),
+    check_turn_change(NewPlayer1, PlayerTurn),
     print_game_state(PlayerTurn),
     next_turn(PlayerTurn),
     ( PlayerTurn = player1 -> NextPlayer = player2 ; NextPlayer = player1 ),
     playing(NextPlayer).
+
+
+check_turn_change(NewPlayer, PlayerTurn) :-
+    (NewPlayer = PlayerTurn -> true ; playing(NewPlayer)).
+
+
 
