@@ -22,4 +22,3 @@ playing(PlayerTurn) :-
     ( PlayerTurn = player1 -> NextPlayer = player2 ; NextPlayer = player1 ),
     playing(NextPlayer).
 
-

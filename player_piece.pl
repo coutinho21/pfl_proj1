@@ -1,14 +1,10 @@
-?-  consult('utils.pl').
-
 :- dynamic player/1.
 :- dynamic rock_piece/2.
 :- dynamic player_piece/3.
 :- dynamic actual_rocks/1.
 
 set_actual_rocks(List) :-
-    findall(Position, rock_piece('_r_', Position), List),
-
-
+    findall(Position, rock_piece('_r_', Position), List).
 
 initialize_players :-
     assert(player(player1)),
@@ -27,9 +23,7 @@ initialize_pieces :-
     assert_rock_piece('_r_', (1, 5)),
     assert_rock_piece('_r_', (5, 1)),
     assert_rock_piece('_r_', (5, 9)),
-    assert_rock_piece('_r_', (9, 5)),
-    set_actual_rocks(ActualRocks).
-
+    assert_rock_piece('_r_', (9, 5)).
 
 
 assert_rock_piece(Piece, Position) :-
@@ -39,6 +33,7 @@ assert_rock_piece(Piece, Position) :-
     assert(rock_piece(Piece, Position)),
     retract_cell(RealRow, RealCol),
     assert_cell(RealRow, RealCol, Piece).
+
 
 retract_rock_piece(Piece, Position) :-
     retract(rock_piece(Piece, Position)),
@@ -67,48 +62,127 @@ retract_player_piece(Player, Piece, Position) :-
 
 
 move_player_piece(Player, Piece) :-
-    player(Player),
-    player_piece(Player, Piece, Position),
+    player(Player), % Check if player exists
+    player_piece(Player, Piece, Position), % Check if player has the piece
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
-    cell(RealRow, RealCol, Piece),
-    choose_move(Piece, Row, Col, Position, NewPosition),
+    cell(RealRow, RealCol, Piece), % Check if piece is in the board
+    choose_move(Piece, Position, NewPosition),
     assert_player_piece(Player, Piece, NewPosition).
     
 
+choose_move(Piece, Position, NewPosition) :-
+    ((Piece = 'tr1'; Piece = 'tr2'), retract_player_piece(Player, Piece, Position), tr_move(Position, NewPosition));
+    ((Piece = 'dw1'; Piece = 'dw2'), retract_player_piece(Player, Piece, Position), dw_move(Position, NewPosition));
+    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition)).
 
 
-
-    
-choose_move(Piece, Row, Col, Position, NewPosition) :-
-    ((Piece = 'tr1'; Piece = 'tr2'), retract_player_piece(Player, Piece, Position), tr_move(Row, Col, NewPosition));
-    ((Piece = 'dw1'; Piece = 'dw2'), retract_player_piece(Player, Piece, Position), dw_move( Row, Col, NewPosition));
-    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move( Row, Col, NewPosition)).
-
-tr_move(Row, Col, NewPosition) :-
+tr_move(Position, NewPosition) :-
+    (Row, Col) = Position,
     set_actual_rocks(ActualRocks),
     write('Choose a direction to move:'), nl,
-    read(Direction),
+    check_tr_options(Position, Options),
+    print_option(Options),
+    read(Choice),
     (
-    (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks));
-    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks));
-    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks))
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks));
+        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks));
+        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks));
+        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks))
     ).
+
+
+check_tr_options(Position, Options) :-
+    (Row, Col) = Position,
+    RealRow is Row + 2,
+    RealCol is Col + 2,
+    UpRow is RealRow - 1,
+    DownRow is RealRow + 1,
+    LeftCol is RealCol - 1,
+    RightCol is RealCol + 1,
+    cell(UpRow, RealCol, PieceUp),
+    cell(DownRow, RealCol, PieceDown),
+    cell(RealRow, LeftCol, PieceLeft),
+    cell(RealRow, RightCol, PieceRight),
+    (member(PieceUp, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Up is 0
+        ;
+        Up is 1
+    ),
+    (member(PieceDown, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Down is 0
+        ;
+        Down is 1
+    ),
+    (member(PieceLeft, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Left is 0
+        ;
+        Left is 1
+    ),
+    (member(PieceRight, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Right is 0
+        ;
+        Right is 1
+    ),
+
+    (Up = 1 -> append([], ['up'], NewOptions) ; NewOptions = []),
+    (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
+    (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
+    (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
 check_rock_for_throw(NewPosition, ActualRocks) :-
     ( member(NewPosition, ActualRocks) -> 
         write('In what direction do you want to throw the rock?'), nl,
-        read(Answer),
+        check_rock_throw_options(NewPosition, Options),
+        print_option(Options),
+        read(Choice),
+        (
+            (Choice = 1, member('up', Options), Answer = 'up');
+            (Choice = 2, member('down', Options), Answer = 'down');
+            (Choice = 3, member('left', Options), Answer = 'left');
+            (Choice = 4, member('right', Options), Answer = 'right'); true
+        ),
         (
             (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
             throw_rock(NewPosition, Answer)
         );
-        true 
+        true
+        
     ).
     
+
+check_rock_throw_options(Position, Options) :-
+    (Row, Col) = Position,
+    RealRow is Row + 2,
+    RealCol is Col + 2,
+    UpRow is RealRow - 1,
+    DownRow is RealRow + 1,
+    LeftCol is RealCol - 1,
+    RightCol is RealCol + 1,
+    cell(UpRow, RealCol, PieceUp),
+    cell(DownRow, RealCol, PieceDown),
+    cell(RealRow, LeftCol, PieceLeft),
+    cell(RealRow, RightCol, PieceRight),
+    (member(PieceUp, ['\\\\\\', '///', '|||', 'tr1', 'tr2']) -> Up is 0
+        ;
+        Up is 1
+    ),
+    (member(PieceDown, ['\\\\\\', '///', '|||', 'tr1', 'tr2']) -> Down is 0
+        ;
+        Down is 1
+    ),
+    (member(PieceLeft, ['\\\\\\', '///', '|||', 'tr1', 'tr2']) -> Left is 0
+        ;
+        Left is 1
+    ),
+    (member(PieceRight, ['\\\\\\', '///', '|||', 'tr1', 'tr2']) -> Right is 0
+        ;
+        Right is 1
+    ),
+
+    (Up = 1 -> append([], ['up'], NewOptions) ; NewOptions = []),
+    (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
+    (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
+    (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
+
 
 throw_rock(RockPosition, Direction) :- 
     write('Rock position: '), write(RockPosition), nl,
@@ -122,53 +196,121 @@ throw_rock(RockPosition, Direction) :-
 
 
 move_rock_until_obstacle(RockPosition, Direction) :-
-    RockPosition = (Row, Col),
+    (Row, Col) = RockPosition,
     (
-    (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+        (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
+        (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
     ),
     check_throw_collision(NewPosition,Result),
     write('Rock moved to '), write(NewPosition), nl,
-    ( Result = false ->
-        (   
-
+    ( 
+    Result = false ->
         NewRockPosition = (Row, Col),
-        write('NewRock position: '), write(NewRockPosition), nl,
+        (   
+        findall(P1, player_piece(_, 'dw1', P1), Dw1List),
+        findall(P2, player_piece(_, 'dw2', P2), Dw2List),
+        (
+        (member(NewRockPosition, Dw1List) -> 
+            retract_player_piece(Player, 'dw1', NewRockPosition),
+            assert_rock_piece('_r_', NewRockPosition);
+        member(NewRockPosition, Dw2List) ->
+            retract_player_piece(Player, 'dw2', NewRockPosition),
+            assert_rock_piece('_r_', NewRockPosition);
         assert_rock_piece('_r_', NewRockPosition)
+        ))
+        
         );
-        move_rock_until_obstacle(NewPosition, Direction) ). 
+    Result = sr -> 
+        (SrRow, SrCol) = NewPosition,
+        RealRowS is SrRow + 2,
+        RealColS is SrCol + 2,
+        cell(RealRowS, RealColS, Piece),
+        (Piece = 'sr1' -> retract_player_piece(_, 'sr1', NewPosition), cell(RealRowD, RealColD, 'dw1'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw1', (RowD,ColD)), cell(RealRowT, RealColT, 'tr1'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr1', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition);
+        Piece = 'sr2' -> retract_player_piece(_, 'sr2', NewPosition), cell(RealRowD, RealColD, 'dw2'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw2', (RowD,ColD)), cell(RealRowT, RealColT, 'tr2'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr2', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition)
+        );   
+    move_rock_until_obstacle(NewPosition, Direction) 
+    ). 
  
+
 check_throw_collision(NewPosition, Result) :-
-    NewPosition = (Row, Col),
+    (Row, Col) = NewPosition,
+    write('Checking collision with '), write(NewPosition), nl,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece),
-    (member(Piece, ['\\\\\\', '///', '|||','tr1', 'tr2', 'sr1', 'sr2', '_r_']) ->
-        write('Rock collided with '), write(Piece), nl, Result = false;
-        write('true'),nl, Result = true
-    ).
+    (member(Piece, ['\\\\\\', '///', '|||','tr1', 'tr2', '_r_']) ->
+    write('Rock collided with '), write(Piece), nl, Result = false;
+    member(Piece,['sr1', 'sr2']) -> 
+    write('Rock collided with '), write(Piece), nl, Result = sr;
+    Result = true).
    
 
+dw_move(Position, NewPosition) :-
+    (Row, Col) = Position,
+    set_actual_rocks(ActualRocks),
+    write('Choose a direction to move:'), nl,
+    check_dw_options(Position, Options),
+    print_option(Options),
+    read(Choice),
+    (
+        (Choice = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Choice = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Choice = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
+        (Choice = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+    ).
 
 
+check_dw_options(Position, Options) :-
+    (Row, Col) = Position,
+    RealRow is Row + 2,
+    RealCol is Col + 2,
+    UpRow is RealRow - 1,
+    DownRow is RealRow + 1,
+    LeftCol is RealCol - 1,
+    RightCol is RealCol + 1,
+    cell(UpRow, RealCol, PieceUp),
+    cell(DownRow, RealCol, PieceDown),
+    cell(RealRow, LeftCol, PieceLeft),
+    cell(RealRow, RightCol, PieceRight),
 
+    /* FIX THIS */
+    (member(PieceUp, ['\\\\\\', '///', '|||']) -> Up is 0
+        ;
+        (member(PieceUp, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Up is 0
+            ; Up is 1
+        )
+    ),
+    (member(PieceDown, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Down is 0
+        ;
+        Down is 1
+    ),
+    (member(PieceLeft, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Left is 0
+        ;
+        Left is 1
+    ),
+    (member(PieceRight, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Right is 0
+        ;
+        Right is 1
+    ),
 
+    (Up = 1 -> append([], ['up'], NewOptions) ; NewOptions = []),
+    (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
+    (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
+    (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
-dw_move(Direction, Row, Col, NewPosition) :-
-    (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol)).
 
 sr_move(Direction, Row, Col, NewPosition) :-
-    (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol)).
-
-
-
-
-
+    (Row, Col) = Position,
+    set_actual_rocks(ActualRocks),
+    write('Choose a direction to move:'), nl,
+    check_sr_options(Position, Options),
+    print_option(Options),
+    read(Choice),
+    (
+        (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
+        (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+    ).
