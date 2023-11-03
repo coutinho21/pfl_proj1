@@ -205,27 +205,46 @@ move_rock_until_obstacle(RockPosition, Direction) :-
     ),
     check_throw_collision(NewPosition,Result),
     write('Rock moved to '), write(NewPosition), nl,
-    ( Result = false ->
+    ( 
+    Result = false ->
+        NewRockPosition = (Row, Col),
         (   
-            (Row, Col) = NewRockPosition,
-            write('NewRock position: '), write(NewRockPosition), nl,
-            assert_rock_piece('_r_', NewRockPosition)
-        )
-        ;
-        move_rock_until_obstacle(NewPosition, Direction) 
+        findall(P1, player_piece(_, 'dw1', P1), Dw1List),
+        findall(P2, player_piece(_, 'dw2', P2), Dw2List),
+        (
+        (member(NewRockPosition, Dw1List) -> 
+            retract_player_piece(Player, 'dw1', NewRockPosition),
+            assert_rock_piece('_r_', NewRockPosition);
+        member(NewRockPosition, Dw2List) ->
+            retract_player_piece(Player, 'dw2', NewRockPosition),
+            assert_rock_piece('_r_', NewRockPosition);
+        assert_rock_piece('_r_', NewRockPosition)
+        ))
+        
+        );
+    Result = sr -> 
+        (SrRow, SrCol) = NewPosition,
+        RealRowS is SrRow + 2,
+        RealColS is SrCol + 2,
+        cell(RealRowS, RealColS, Piece),
+        (Piece = 'sr1' -> retract_player_piece(_, 'sr1', NewPosition), cell(RealRowD, RealColD, 'dw1'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw1', (RowD,ColD)), cell(RealRowT, RealColT, 'tr1'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr1', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition);
+        Piece = 'sr2' -> retract_player_piece(_, 'sr2', NewPosition), cell(RealRowD, RealColD, 'dw2'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw2', (RowD,ColD)), cell(RealRowT, RealColT, 'tr2'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr2', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition)
+        );   
+    move_rock_until_obstacle(NewPosition, Direction) 
     ). 
  
 
 check_throw_collision(NewPosition, Result) :-
     (Row, Col) = NewPosition,
+    write('Checking collision with '), write(NewPosition), nl,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece),
-    (member(Piece, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', '_r_']) ->
-        write('Rock collided with '), write(Piece), nl, Result = false
-        ;
-        write('true'),nl, Result = true
-    ).
+    (member(Piece, ['\\\\\\', '///', '|||','tr1', 'tr2', '_r_']) ->
+    write('Rock collided with '), write(Piece), nl, Result = false;
+    member(Piece,['sr1', 'sr2']) -> 
+    write('Rock collided with '), write(Piece), nl, Result = sr;
+    Result = true).
    
 
 dw_move(Position, NewPosition) :-
@@ -255,7 +274,8 @@ check_dw_options(Position, Options) :-
     cell(DownRow, RealCol, PieceDown),
     cell(RealRow, LeftCol, PieceLeft),
     cell(RealRow, RightCol, PieceRight),
-    /* FIX THIS
+
+    /* FIX THIS */
     (member(PieceUp, ['\\\\\\', '///', '|||']) -> Up is 0
         ;
         (member(PieceUp, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Up is 0
@@ -279,11 +299,18 @@ check_dw_options(Position, Options) :-
     (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
     (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
-*/
+
 
 sr_move(Direction, Row, Col, NewPosition) :-
-    (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol)).
-
+    (Row, Col) = Position,
+    set_actual_rocks(ActualRocks),
+    write('Choose a direction to move:'), nl,
+    check_sr_options(Position, Options),
+    print_option(Options),
+    read(Choice),
+    (
+        (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
+        (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+    ).
