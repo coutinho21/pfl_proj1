@@ -132,10 +132,10 @@ move_rock_until_obstacle(RockPosition, Direction) :-
     check_throw_collision(NewPosition,Result),
     write('Rock moved to '), write(NewPosition), nl,
     ( Result = false ->
+        (
         NewRockPosition = (Row, Col),
         write(NewRockPosition),write(':nrp'), nl,
         (   
-        (
         findall(P1, player_piece(_, 'dw1', P1), Dw1List),
         findall(P2, player_piece(_, 'dw2', P2), Dw2List),
         ((member(NewRockPosition, Dw1List) ->
@@ -151,11 +151,12 @@ move_rock_until_obstacle(RockPosition, Direction) :-
             write('retracted'), nl,
             assert_rock_piece('_r_', NewRockPosition),
             write('asserted'), nl
-        )));        
-        
+        ))        
+        );
         assert_rock_piece('_r_', NewRockPosition)
         );
-        move_rock_until_obstacle(NewPosition, Direction) ). 
+        move_rock_until_obstacle(NewPosition, Direction) 
+        ). 
  
 check_throw_collision(NewPosition, Result) :-
     NewPosition = (Row, Col),
