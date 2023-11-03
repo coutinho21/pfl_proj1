@@ -102,7 +102,8 @@ check_rock_for_throw(NewPosition, ActualRocks) :-
     ( member(NewPosition, ActualRocks) -> 
         write('In what direction do you want to throw the rock?'), nl,
         read(Answer),
-        (
+        (   
+
             (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
             throw_rock(NewPosition, Answer)
         );
@@ -131,43 +132,45 @@ move_rock_until_obstacle(RockPosition, Direction) :-
     ),
     check_throw_collision(NewPosition,Result),
     write('Rock moved to '), write(NewPosition), nl,
-    ( Result = false ->
-        (
+    ( 
+    Result = false ->
         NewRockPosition = (Row, Col),
-        write(NewRockPosition),write(':nrp'), nl,
         (   
         findall(P1, player_piece(_, 'dw1', P1), Dw1List),
         findall(P2, player_piece(_, 'dw2', P2), Dw2List),
-        ((member(NewRockPosition, Dw1List) ->
-            write('Rock collided with a dwarf!'), nl,
+        (
+        (member(NewRockPosition, Dw1List) -> 
             retract_player_piece(Player, 'dw1', NewRockPosition),
-            write('retracted'), nl,
-            assert_rock_piece('_r_', NewRockPosition),
-            write('asserted'), nl
-        );
-        (member(NewRockPosition, Dw2List) ->
-            write('Rock collided with a dwarf!'), nl,
+            assert_rock_piece('_r_', NewRockPosition);
+        member(NewRockPosition, Dw2List) ->
             retract_player_piece(Player, 'dw2', NewRockPosition),
-            write('retracted'), nl,
-            assert_rock_piece('_r_', NewRockPosition),
-            write('asserted'), nl
-        ))        
-        );
+            assert_rock_piece('_r_', NewRockPosition);
         assert_rock_piece('_r_', NewRockPosition)
+        ))
+        
         );
-        move_rock_until_obstacle(NewPosition, Direction) 
-        ). 
+    Result = sr -> 
+        (SrRow, SrCol) = NewPosition,
+        RealRowS is SrRow + 2,
+        RealColS is SrCol + 2,
+        cell(RealRowS, RealColS, Piece),
+        (Piece = 'sr1' -> retract_player_piece(_, 'sr1', NewPosition), cell(RealRowD, RealColD, 'dw1'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw1', (RowD,ColD)), cell(RealRowT, RealColT, 'tr1'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr1', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition);
+        Piece = 'sr2' -> retract_player_piece(_, 'sr2', NewPosition), cell(RealRowD, RealColD, 'dw2'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw2', (RowD,ColD)), cell(RealRowT, RealColT, 'tr2'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr2', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition)
+        );   
+    move_rock_until_obstacle(NewPosition, Direction) 
+    ). 
  
 check_throw_collision(NewPosition, Result) :-
-    NewPosition = (Row, Col),
+    (Row, Col) = NewPosition,
     write('Checking collision with '), write(NewPosition), nl,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece),
-    (member(Piece, ['\\\\\\', '///', '|||','tr1', 'tr2', 'sr1', 'sr2', '_r_']) ->
-        write('Rock collided with '), write(Piece), nl, Result = false;
-        write('true'),nl, Result = true
-    ).
+    (member(Piece, ['\\\\\\', '///', '|||','tr1', 'tr2', '_r_']) ->
+    write('Rock collided with '), write(Piece), nl, Result = false;
+    member(Piece,['sr1', 'sr2']) -> 
+    write('Rock collided with '), write(Piece), nl, Result = sr;
+    Result = true).
    
 
 
@@ -186,10 +189,14 @@ dw_move( Row, Col, NewPosition) :-
     ).
 
 sr_move( Row, Col, NewPosition) :-
+    write('Choose a direction to move:'), nl,
+    read(Direction),
+    (
     (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
     (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
     (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol)).
+    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+    ).  
 
 
 
