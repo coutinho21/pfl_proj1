@@ -6,7 +6,7 @@
 :- dynamic actual_rocks/1.
 
 set_actual_rocks(List) :-
-    findall(Position, rock_piece('_r_', Position), List),
+    findall(Position, rock_piece('_r_', Position), List).
 
 
 
@@ -132,16 +132,34 @@ move_rock_until_obstacle(RockPosition, Direction) :-
     check_throw_collision(NewPosition,Result),
     write('Rock moved to '), write(NewPosition), nl,
     ( Result = false ->
-        (   
-
         NewRockPosition = (Row, Col),
-        write('NewRock position: '), write(NewRockPosition), nl,
+        write(NewRockPosition),write(':nrp'), nl,
+        (   
+        (
+        findall(P1, player_piece(_, 'dw1', P1), Dw1List),
+        findall(P2, player_piece(_, 'dw2', P2), Dw2List),
+        ((member(NewRockPosition, Dw1List) ->
+            write('Rock collided with a dwarf!'), nl,
+            retract_player_piece(Player, 'dw1', NewRockPosition),
+            write('retracted'), nl,
+            assert_rock_piece('_r_', NewRockPosition),
+            write('asserted'), nl
+        );
+        (member(NewRockPosition, Dw2List) ->
+            write('Rock collided with a dwarf!'), nl,
+            retract_player_piece(Player, 'dw2', NewRockPosition),
+            write('retracted'), nl,
+            assert_rock_piece('_r_', NewRockPosition),
+            write('asserted'), nl
+        )));        
+        
         assert_rock_piece('_r_', NewRockPosition)
         );
         move_rock_until_obstacle(NewPosition, Direction) ). 
  
 check_throw_collision(NewPosition, Result) :-
     NewPosition = (Row, Col),
+    write('Checking collision with '), write(NewPosition), nl,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece),
@@ -156,13 +174,17 @@ check_throw_collision(NewPosition, Result) :-
 
 
 
-dw_move(Direction, Row, Col, NewPosition) :-
+dw_move( Row, Col, NewPosition) :-
+    write('Choose a direction to move:'), nl,
+    read(Direction),
+    (
     (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol)).
+    (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol) );
+    (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol) );
+    (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol) )
+    ).
 
-sr_move(Direction, Row, Col, NewPosition) :-
+sr_move( Row, Col, NewPosition) :-
     (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
     (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
     (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
