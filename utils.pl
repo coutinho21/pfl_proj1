@@ -5,3 +5,18 @@ printlist([X|Xs]) :-
     nl,
     printlist(Xs).
 
+print_option(Options) :-
+    ([H|T] = Options ; H = []),
+    (
+        H = [] -> true
+        ;
+        (
+            (
+                (H = 'up', write('1- '), write(H), nl);
+                (H = 'down', write('2- '), write(H), nl);
+                (H = 'left', write('3- '), write(H), nl);
+                (H = 'right', write('4- '), write(H), nl)
+            ),
+            print_option(T)
+        )
+    ).
