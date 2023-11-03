@@ -230,7 +230,7 @@ move_rock_until_obstacle(RockPosition, Direction, Game) :-
             ;
             Piece = 'sr2' -> retract_player_piece(_, 'sr2', NewPosition), cell(RealRowD, RealColD, 'dw2'), RowD is RealRowD - 2, ColD is RealColD - 2, retract_player_piece(_, 'dw2', (RowD,ColD)), cell(RealRowT, RealColT, 'tr2'), RowT is RealRowT - 2, ColT is RealColT - 2, retract_player_piece(_, 'tr2', (RowT,ColT)) , write('3'), assert_rock_piece('_r_', NewPosition)
             );   
-        move_rock_until_obstacle(NewPosition, Direction, NewPlayer) 
+        move_rock_until_obstacle(NewPosition, Direction, Game) 
     ).
 
 
