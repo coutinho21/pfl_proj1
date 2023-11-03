@@ -1,4 +1,3 @@
-
 printlist([]).
 printlist([X|Xs]) :-
     write('Rock Position at: '),
