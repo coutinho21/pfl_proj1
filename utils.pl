@@ -20,3 +20,9 @@ print_option(Options) :-
             print_option(T)
         )
     ).
+
+
+% function to check if a ver is instantiated
+not_inst(Var) :-
+  \+(\+(Var=0)),
+  \+(\+(Var=1)).
