@@ -1,7 +1,7 @@
 ?- consult('board.pl'), consult('user_interface.pl'), consult('player_piece.pl'), consult('functions.pl'), consult('utils.pl').
 
 
-start_game :-
+play :-
     initialize_board,
     initialize_players,
     print_game_state(player1),
@@ -38,8 +38,5 @@ check_turn_change(NewPlayer, PlayerTurn, Game) :-
 
 game_over(Player) :-
     print_game_state(Player),
-    write('SPLUT!'), nl,
-    write(Player), write(' won!'), nl,
-    write('Press any key to exit...'), nl,
-    get_char(_),
-    halt.
+    nl,write('        SPLUT!         '), nl, nl,
+    write(Player), write(' won!!!'), nl, nl.
