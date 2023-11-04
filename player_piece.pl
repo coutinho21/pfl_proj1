@@ -264,10 +264,10 @@ dw_move(Position, NewPosition) :-
     accumulatedlist('down',AccumulatedList2),
     accumulatedlist('left',AccumulatedList3),
     accumulatedlist('right',AccumulatedList4),
-    write('List1:'), write(AccumulatedList1), nl,
-    write('List2:'), write(AccumulatedList2), nl,
-    write('List3:'), write(AccumulatedList3), nl,
-    write('List4:'), write(AccumulatedList4), nl,
+    write('List1:'), write(AccumulatedList1), nl,   /* Apagar esta linha depois */
+    write('List2:'), write(AccumulatedList2), nl,   /* Apagar esta linha depois */
+    write('List3:'), write(AccumulatedList3), nl,   /* Apagar esta linha depois */
+    write('List4:'), write(AccumulatedList4), nl,   /* Apagar esta linha depois */
     retractall(accumulatedlist('up',_)),
     retractall(accumulatedlist('down',_)),
     retractall(accumulatedlist('left',_)),
@@ -275,23 +275,28 @@ dw_move(Position, NewPosition) :-
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol)
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), NextRow is NewRow -1 , NextPosition = (NextRow,NextCol),move_accumulated_list('up', NewPosition, AccumulatedList1)
         );
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('down', NewPosition, AccumulatedList2));
+        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), move_accumulated_list('left', Newosition, AccumulatedList3));
+        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), move_accumulated_list('right',NewPosition, AccumulatedList4))
     ).
 
-/*
+
 move_accumulated_list(_, _, []).
 move_accumulated_list(Direction, InitialPosition, [Piece|Rest]) :-
-    move_piece(Direction, Piece, Position, NewPosition),
-    assert_player_piece(_, Piece, NewPosition),
+    (Row, Col) = InitialPosition,
+    (
+        (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
+        (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+    ),
+    (assert_player_piece(player1, Piece, NewPosition); assert_player_piece(player2, Piece, NewPosition)),
     move_accumulated_list(Direction, NewPosition, Rest).
 
 
-move_accumulated_list('up', NewPosition, AccumulatedList1)
-*/
+
 
 
 
@@ -419,8 +424,6 @@ check_dw_push(Direction, Row, Col, Result, Acc) :-
             member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
                 accumulatedlist('right',List),
                 append(List, Piece, NewList),
-                write('Appended4 '), write(Piece), nl,
-                write(NewList), nl,
                 asserta(accumulatedlist('right',NewList)),
 
                 check_dw_push(Direction, Row, NewCol, Result, NewList)
@@ -428,12 +431,10 @@ check_dw_push(Direction, Row, Col, Result, Acc) :-
             member(Piece, ['\\\\\\', '///', '|||']) ->
                 retractall(accumulatedlist('right',_)),
                 asserta(accumulatedlist('right',[])),
-                write('freed4'), nl,
                 Result = false
 
             ;
             member(Piece, ['   ']) ->
-                write('emptyspace check '), nl,
                 Result = true
         ))
 
