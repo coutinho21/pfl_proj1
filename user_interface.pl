@@ -1,7 +1,7 @@
 /* Board Printing */
 
 % Prints the board and the current player
-print_game_state(PlayerTurn) :-
+display_game(PlayerTurn) :-
     player(PlayerTurn),
     print_board,
     nl, write('Current player: '), write(PlayerTurn), nl.
@@ -58,4 +58,4 @@ next_turn(Player, NewPlayer, Game) :-
             Choice = 3, Piece = 'sr2'
         )
     ),
-    move_player_piece(Player, Piece, NewPlayer, Game).
+    move(Player, Piece, NewPlayer, Game).
