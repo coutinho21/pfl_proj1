@@ -2,6 +2,8 @@
 :- dynamic rock_piece/2.
 :- dynamic player_piece/3.
 :- dynamic actual_rocks/1.
+:- dynamic accumulatedlist/2.
+
 
 
 set_actual_rocks(List) :-
@@ -249,18 +251,54 @@ check_throw_collision(NewPosition, Result) :-
     Result = true).
 
 
+
 dw_move(Position, NewPosition) :-
     (Row, Col) = Position,
+    assert(accumulatedlist('up',[])),
+    assert(accumulatedlist('down',[])),
+    assert(accumulatedlist('left',[])),
+    assert(accumulatedlist('right',[])),
     write('Choose a direction to move:'), nl,
     check_dw_options(Position, Options),
+    accumulatedlist('up',AccumulatedList1),
+    accumulatedlist('down',AccumulatedList2),
+    accumulatedlist('left',AccumulatedList3),
+    accumulatedlist('right',AccumulatedList4),
+    write('List1:'), write(AccumulatedList1), nl,   /* Apagar esta linha depois */
+    write('List2:'), write(AccumulatedList2), nl,   /* Apagar esta linha depois */
+    write('List3:'), write(AccumulatedList3), nl,   /* Apagar esta linha depois */
+    write('List4:'), write(AccumulatedList4), nl,   /* Apagar esta linha depois */
+    retractall(accumulatedlist('up',_)),
+    retractall(accumulatedlist('down',_)),
+    retractall(accumulatedlist('left',_)),
+    retractall(accumulatedlist('right',_)),
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), NextRow is NewRow -1 , NextPosition = (NextRow,NextCol),move_accumulated_list('up', NewPosition, AccumulatedList1)
+        );
+        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('down', NewPosition, AccumulatedList2));
+        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), move_accumulated_list('left', Newosition, AccumulatedList3));
+        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), move_accumulated_list('right',NewPosition, AccumulatedList4))
     ).
+
+
+move_accumulated_list(_, _, []).
+move_accumulated_list(Direction, InitialPosition, [Piece|Rest]) :-
+    (Row, Col) = InitialPosition,
+    (
+        (Direction = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
+        (Direction = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
+        (Direction = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+    ),
+    (assert_player_piece(player1, Piece, NewPosition); assert_player_piece(player2, Piece, NewPosition)),
+    move_accumulated_list(Direction, NewPosition, Rest).
+
+
+
+
+
 
 
 check_dw_options(Position, Options) :-
@@ -281,7 +319,7 @@ check_dw_options(Position, Options) :-
         (
             member(PieceUp, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> 
             (
-                check_dw_push('up', UpRow, RealCol) -> Up is 1 ; Up is 0
+            check_dw_push('up', UpRow, RealCol,Result, Acc ), (Result = true -> Up is 1 ; Up is 0)
             )
             ;
             Up is 1
@@ -292,7 +330,7 @@ check_dw_options(Position, Options) :-
         (
             member(PieceDown, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> 
             (
-                check_dw_push('down', DownRow, RealCol) -> Down is 1 ; Down is 0
+                check_dw_push('down', DownRow, RealCol,Result, Acc ),(Result = true -> Down is 1 ; Down is 0)
             )
             ;
             Down is 1
@@ -303,7 +341,7 @@ check_dw_options(Position, Options) :-
         (
             member(PieceLeft, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> 
             (
-                check_dw_push('left', RealRow, LeftCol) -> Left is 1 ; Left is 0
+                check_dw_push('left', RealRow, LeftCol,Result, Acc ),(Result = true -> Left is 1 ; Left is 0)
             )
             ;
             Left is 1
@@ -314,7 +352,7 @@ check_dw_options(Position, Options) :-
         (
             member(PieceRight, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> 
             (
-                check_dw_push('right', RealRow, RightCol) -> Right is 1 ; Right is 0
+                check_dw_push('right', RealRow, RightCol, Result, Acc),(Result = true -> Right is 1 ; Right is 0)
             )
             ;
             Right is 1
@@ -327,48 +365,85 @@ check_dw_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-check_dw_push(Direction, Row, Col) :-
-    (
-        (Direction = 'up', NewRow is Row - 1, cell(NewRow, Col, Piece),
-            (
-                (member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']), check_dw_push(Direction, NewRow, Col))
-                ;
-                (member(Piece, ['\\\\\\', '///', '|||']), false)
-                ;
-                (member(Piece, ['   ']), true)
-            )
-        )
-        ;
-        (Direction = 'down', NewRow is Row + 1, cell(NewRow, Col, Piece),
-            (
-                (member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']), check_dw_push(Direction, NewRow, Col))
-                ;
-                (member(Piece, ['\\\\\\', '///', '|||']), false)
-                ;
-                (member(Piece, ['   ']), true)
-            )
-        )
-        ;
-        (Direction = 'left', NewCol is Col - 1, cell(Row, NewCol, Piece),
-            (
-                (member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']), check_dw_push(Direction, Row, NewCol))
-                ;
-                (member(Piece, ['\\\\\\', '///', '|||']), false)
-                ;
-                (member(Piece, ['   ']), true)
-            )
-        );
-        (Direction = 'right', NewCol is Col + 1, cell(Row, NewCol, Piece),
-            (
-                (member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']), check_dw_push(Direction, Row, NewCol))
-                ;
-                (member(Piece, ['\\\\\\', '///', '|||']), false)
-                ;
-                (member(Piece, ['   ']), true)
-            )
-        )
-    ).
 
+check_dw_push(Direction, Row, Col, Result, Acc) :-
+    (
+        (Direction = 'up', NewRow is Row - 1, cell(Row, Col, Piece), nl,
+    (
+        member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+            accumulatedlist('up', List),
+            append(List, [Piece], NewList),
+            asserta(accumulatedlist('up', NewList)),
+            check_dw_push(Direction, NewRow, Col, Result, NewList)
+        ;
+        member(Piece, ['\\\\\\', '///', '|||']) ->
+            retractall(accumulatedlist('up', _)),
+            asserta(accumulatedlist('up', [])),
+            Result = false
+        ;
+        member(Piece, ['   ']) -> 
+            Result = true
+    ))
+    ;
+    (Direction = 'down', NewRow is Row + 1, cell(Row, Col, Piece), nl,
+    (
+        member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+            accumulatedlist('down', List),
+            append(List, [Piece], NewList),
+            asserta(accumulatedlist('down', NewList)),
+            check_dw_push(Direction, NewRow, Col, Result, NewList)
+        ;
+        member(Piece, ['\\\\\\', '///', '|||']) ->
+            retractall(accumulatedlist('down', _)),
+            asserta(accumulatedlist('down', [])),
+            Result = false
+        ;
+        member(Piece, ['   ']) -> 
+            Result = true
+    ))
+    ;
+    (Direction = 'left', NewCol is Col - 1, cell(Row, Col, Piece), nl,
+    (
+        member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+            accumulatedlist('left', List),
+            append(List, [Piece], NewList),
+            asserta(accumulatedlist('left', NewList)),
+            check_dw_push(Direction, Row, NewCol, Result, NewList)
+        ;
+        member(Piece, ['\\\\\\', '///', '|||']) ->
+            retractall(accumulatedlist('left', _)),
+            asserta(accumulatedlist('left', [])),
+            Result = false
+        ;
+        member(Piece, ['   ']) -> 
+            Result = true
+    ))
+    ;
+        (Direction = 'right',NewCol is Col + 1, cell(Row, Col, Piece), write(Piece), nl,
+        (
+            member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+                accumulatedlist('right',List),
+                append(List, Piece, NewList),
+                asserta(accumulatedlist('right',NewList)),
+
+                check_dw_push(Direction, Row, NewCol, Result, NewList)
+            ;
+            member(Piece, ['\\\\\\', '///', '|||']) ->
+                retractall(accumulatedlist('right',_)),
+                asserta(accumulatedlist('right',[])),
+                Result = false
+
+            ;
+            member(Piece, ['   ']) ->
+                Result = true
+        ))
+
+    ). 
+
+
+
+
+    
 
 sr_move(Position, NewPosition) :-
     (Row, Col) = Position,
