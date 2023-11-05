@@ -73,8 +73,7 @@ check_used_levitate(HaveUsedLevitate, UsedLevitate, NewHaveUsedLevitate) :-
         (not_inst(UsedLevitate) -> true ; UsedLevitate = 1 -> NewHaveUsedLevitate is 1 ; NewHaveUsedLevitate is 0)
         ;
         NewHaveUsedLevitate is 1
-    ),
-    write(NewHaveUsedLevitate),write('HaveUsedLevitate for the next one'), nl.
+    ).
 
 
 player_vs_computer :-
