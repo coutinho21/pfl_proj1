@@ -34,12 +34,12 @@ write_cell(Symbol) :- write('|'), write(Symbol).
 
 /* Communicating with user */
 
-next_turn(Player, NewPlayer, Game) :-
+next_turn(Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate) :-
     ( Player = player1 ->
         write('Choose a piece to move:'), nl,
-        write('1- tr1'), nl,
-        write('2- dw1'), nl,
-        write('3- sr1'), nl,
+        write('1. tr1'), nl,
+        write('2. dw1'), nl,
+        write('3. sr1'), nl,
         read(Choice),
         (
             Choice = 1, Piece = 'tr1';
@@ -48,9 +48,9 @@ next_turn(Player, NewPlayer, Game) :-
         )
     ; 
         write('Choose a piece to move:'), nl,
-        write('1- tr2'), nl,
-        write('2- dw2'), nl,
-        write('3- sr2'), nl,
+        write('1. tr2'), nl,
+        write('2. dw2'), nl,
+        write('3. sr2'), nl,
         read(Choice),
         (
             Choice = 1, Piece = 'tr2';
@@ -58,4 +58,4 @@ next_turn(Player, NewPlayer, Game) :-
             Choice = 3, Piece = 'sr2'
         )
     ),
-    move(Player, Piece, NewPlayer, Game).
+    move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate).

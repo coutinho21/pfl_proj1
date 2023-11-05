@@ -9,10 +9,12 @@
 set_actual_rocks(List) :-
     findall(Position, rock_piece('_r_', Position), List).
 
+
 initialize_players :-
     assert(player(player1)),
     assert(player(player2)),
     initialize_pieces.
+
 
 /* Piece manipulation */
 
@@ -45,7 +47,7 @@ retract_rock_piece(Piece, Position) :-
     retractall(rock_piece(Piece, Position)),
     retract_cell(RealRow, RealCol),
     assert_cell(RealRow, RealCol, '   ').
-    
+
 
 assert_player_piece(Player, Piece, Position) :-
     (Row, Col) = Position,
@@ -54,7 +56,7 @@ assert_player_piece(Player, Piece, Position) :-
     assert(player_piece(Player, Piece, Position)),
     retract_cell(RealRow, RealCol),
     assert_cell(RealRow, RealCol, Piece).
-    
+
 
 retract_player_piece(Player, Piece, Position) :-
     (Row, Col) = Position,
@@ -65,21 +67,21 @@ retract_player_piece(Player, Piece, Position) :-
     assert_cell(RealRow, RealCol, '   ').
 
 
-move(Player, Piece, NewPlayer, Game) :-
+move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate) :-
     player(Player), % Check if player exists
     player_piece(Player, Piece, Position), % Check if player has the piece
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece), % Check if piece is in the board
-    choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game),
+    choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate),
     assert_player_piece(Player, Piece, NewPosition).
-    
 
-choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game) :-
+
+choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate) :-
     ((Piece = 'tr1'; Piece = 'tr2'), retract_player_piece(Player, Piece, Position), tr_move(Position, NewPosition, Player, NewPlayer, Game));
     ((Piece = 'dw1'; Piece = 'dw2'), retract_player_piece(Player, Piece, Position), dw_move(Position, NewPosition));
-    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition)).
+    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate)).
 
 
 tr_move(Position, NewPosition, Player, NewPlayer, Game) :-
@@ -90,11 +92,12 @@ tr_move(Position, NewPosition, Player, NewPlayer, Game) :-
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up',BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
         (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
         (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
         (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game))
     ).
+
 
 check_tr_options(Position, Options) :-
     (Row, Col) = Position,
@@ -108,6 +111,7 @@ check_tr_options(Position, Options) :-
     cell(DownRow, RealCol, PieceDown),
     cell(RealRow, LeftCol, PieceLeft),
     cell(RealRow, RightCol, PieceRight),
+
     (member(PieceUp, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Up is 0
         ;
         Up is 1
@@ -131,8 +135,6 @@ check_tr_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-
-
 check_for_rock_pull(Position, ActualRocks, Direction, BackPosition) :-
     write(ActualRocks), nl,
     (member(BackPosition,ActualRocks)-> 
@@ -147,7 +149,6 @@ check_for_rock_pull(Position, ActualRocks, Direction, BackPosition) :-
         )
     );
     true.
-
 
 
 check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game) :-
@@ -171,7 +172,7 @@ check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game) :-
         NewPlayer = Player
         
     ).
-    
+
 
 check_rock_throw_options(Position, Options) :-
     (Row, Col) = Position,
@@ -185,6 +186,7 @@ check_rock_throw_options(Position, Options) :-
     cell(DownRow, RealCol, PieceDown),
     cell(RealRow, LeftCol, PieceLeft),
     cell(RealRow, RightCol, PieceRight),
+
     (member(PieceUp, ['\\\\\\', '///', '|||', 'tr1', 'tr2']) -> Up is 0
         ;
         Up is 1
@@ -270,7 +272,6 @@ check_throw_collision(NewPosition, Result) :-
     Result = true).
 
 
-
 dw_move(Position, NewPosition) :-
     (Row, Col) = Position,
     assert(accumulatedlist('up',[])),
@@ -294,8 +295,7 @@ dw_move(Position, NewPosition) :-
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), NextRow is NewRow -1 , NextPosition = (NextRow,NextCol),move_accumulated_list('up', NewPosition, AccumulatedList1)
-        );
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), NextRow is NewRow -1 , NextPosition = (NextRow,NextCol),move_accumulated_list('up', NewPosition, AccumulatedList1));
         (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('down', NewPosition, AccumulatedList2));
         (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), move_accumulated_list('left', Newosition, AccumulatedList3));
         (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), move_accumulated_list('right',NewPosition, AccumulatedList4))
@@ -313,11 +313,6 @@ move_accumulated_list(Direction, InitialPosition, [Piece|Rest]) :-
     ),
     (assert_player_piece(player1, Piece, NewPosition); assert_player_piece(player2, Piece, NewPosition)),
     move_accumulated_list(Direction, NewPosition, Rest).
-
-
-
-
-
 
 
 check_dw_options(Position, Options) :-
@@ -384,102 +379,122 @@ check_dw_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-
 check_dw_push(Direction, Row, Col, Result, Acc) :-
     (
         (Direction = 'up', NewRow is Row - 1, cell(Row, Col, Piece), nl,
-    (
-        member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
-            accumulatedlist('up', List),
-            append(List, [Piece], NewList),
-            asserta(accumulatedlist('up', NewList)),
-            check_dw_push(Direction, NewRow, Col, Result, NewList)
+            (
+                member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+                    accumulatedlist('up', List),
+                    append(List, [Piece], NewList),
+                    asserta(accumulatedlist('up', NewList)),
+                    check_dw_push(Direction, NewRow, Col, Result, NewList)
+                ;
+                member(Piece, ['\\\\\\', '///', '|||']) ->
+                    retractall(accumulatedlist('up', _)),
+                    asserta(accumulatedlist('up', [])),
+                    Result = false
+                ;
+                member(Piece, ['   ']) -> 
+                    Result = true
+            )
+        )
         ;
-        member(Piece, ['\\\\\\', '///', '|||']) ->
-            retractall(accumulatedlist('up', _)),
-            asserta(accumulatedlist('up', [])),
-            Result = false
+        (Direction = 'down', NewRow is Row + 1, cell(Row, Col, Piece), nl,
+            (
+                member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+                    accumulatedlist('down', List),
+                    append(List, [Piece], NewList),
+                    asserta(accumulatedlist('down', NewList)),
+                    check_dw_push(Direction, NewRow, Col, Result, NewList)
+                ;
+                member(Piece, ['\\\\\\', '///', '|||']) ->
+                    retractall(accumulatedlist('down', _)),
+                    asserta(accumulatedlist('down', [])),
+                    Result = false
+                ;
+                member(Piece, ['   ']) -> 
+                    Result = true
+            )
+        )
         ;
-        member(Piece, ['   ']) -> 
-            Result = true
-    ))
-    ;
-    (Direction = 'down', NewRow is Row + 1, cell(Row, Col, Piece), nl,
-    (
-        member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
-            accumulatedlist('down', List),
-            append(List, [Piece], NewList),
-            asserta(accumulatedlist('down', NewList)),
-            check_dw_push(Direction, NewRow, Col, Result, NewList)
+        (Direction = 'left', NewCol is Col - 1, cell(Row, Col, Piece), nl,
+            (
+                member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+                    accumulatedlist('left', List),
+                    append(List, [Piece], NewList),
+                    asserta(accumulatedlist('left', NewList)),
+                    check_dw_push(Direction, Row, NewCol, Result, NewList)
+                ;
+                member(Piece, ['\\\\\\', '///', '|||']) ->
+                    retractall(accumulatedlist('left', _)),
+                    asserta(accumulatedlist('left', [])),
+                    Result = false
+                ;
+                member(Piece, ['   ']) -> 
+                    Result = true
+            )
+        )
         ;
-        member(Piece, ['\\\\\\', '///', '|||']) ->
-            retractall(accumulatedlist('down', _)),
-            asserta(accumulatedlist('down', [])),
-            Result = false
-        ;
-        member(Piece, ['   ']) -> 
-            Result = true
-    ))
-    ;
-    (Direction = 'left', NewCol is Col - 1, cell(Row, Col, Piece), nl,
-    (
-        member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
-            accumulatedlist('left', List),
-            append(List, [Piece], NewList),
-            asserta(accumulatedlist('left', NewList)),
-            check_dw_push(Direction, Row, NewCol, Result, NewList)
-        ;
-        member(Piece, ['\\\\\\', '///', '|||']) ->
-            retractall(accumulatedlist('left', _)),
-            asserta(accumulatedlist('left', [])),
-            Result = false
-        ;
-        member(Piece, ['   ']) -> 
-            Result = true
-    ))
-    ;
-        (Direction = 'right',NewCol is Col + 1, cell(Row, Col, Piece), write(Piece), nl,
-        (
-            member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
-                accumulatedlist('right',List),
-                append(List, Piece, NewList),
-                asserta(accumulatedlist('right',NewList)),
+        (Direction = 'right', NewCol is Col + 1, cell(Row, Col, Piece), write(Piece), nl,
+            (
+                member(Piece, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) ->
+                    accumulatedlist('right',List),
+                    append(List, Piece, NewList),
+                    asserta(accumulatedlist('right',NewList)),
 
-                check_dw_push(Direction, Row, NewCol, Result, NewList)
-            ;
-            member(Piece, ['\\\\\\', '///', '|||']) ->
-                retractall(accumulatedlist('right',_)),
-                asserta(accumulatedlist('right',[])),
-                Result = false
+                    check_dw_push(Direction, Row, NewCol, Result, NewList)
+                ;
+                member(Piece, ['\\\\\\', '///', '|||']) ->
+                    retractall(accumulatedlist('right',_)),
+                    asserta(accumulatedlist('right',[])),
+                    Result = false
 
-            ;
-            member(Piece, ['   ']) ->
-                Result = true
-        ))
-
+                ;
+                member(Piece, ['   ']) ->
+                    Result = true
+            )
+        )
     ). 
 
 
-
-
-    
-
-sr_move(Position, NewPosition) :-
+sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate) :-
     (Row, Col) = Position,
-    set_actual_rocks(ActualRocks),
+    check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock),
+    (RockRow, RockCol) = ChosenRock,
     write('Choose a direction to move:'), nl,
-    check_sr_options(Position, Options),
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol))
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow - 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true));
+        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow + 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true));
+        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow, NewRockCol is RockCol - 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true));
+        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow, NewRockCol is RockCol + 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true))
     ).
 
 
-check_sr_options(Position, Options) :-
+check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock) :-
+    (HaveUsedLevitate = 0 ->
+        (
+            write('Do you want to use Levitate?'), nl,
+            write('1. Yes'), nl,
+            write('2. No'), nl,
+            read(Levitate),
+            (
+                Levitate = 1 -> 
+                (
+                    UsedLevitate is 1,
+                    set_actual_rocks(ActualRocks),
+                    write('Which rock do you want to levitate?'), nl,
+                    Num is 1,
+                    print_rocks(ActualRocks, Num),
+                    read(RockIndex),
+                    get_rock_position(RockIndex, ActualRocks, RockPosition),
+                    check_rock_levitate_options(RockPosition, RockLevitateOptions),
+                    ChosenRock = RockPosition
+                ) ; true
+            )
+        ) ; true
+    ),
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
@@ -492,25 +507,97 @@ check_sr_options(Position, Options) :-
     cell(RealRow, LeftCol, PieceLeft),
     cell(RealRow, RightCol, PieceRight),
 
-    /* FIX THIS */
-    (member(PieceUp, ['\\\\\\', '///', '|||']) -> Up is 0
-    ;
-    Up is 1
+    (member(PieceUp, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Up is 0
+        ;
+        Up is 1
     ),
-    (member(PieceDown, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Down is 0
-    ;
-    Down is 1
+    (member(PieceDown, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Down is 0
+        ;
+        Down is 1
     ),
-    (member(PieceLeft, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Left is 0
-    ;
-    Left is 1
+    (member(PieceLeft, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Left is 0
+        ;
+        Left is 1
     ),
-    (member(PieceRight, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2']) -> Right is 0
-    ;
-    Right is 1
+    (member(PieceRight, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Right is 0
+        ;
+        Right is 1
+    ),
+
+    (Up = 1 -> append([], ['up'], NewOptions) ; NewOptions = []),
+    (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
+    (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
+    (Right = 1 -> append(NewOptions3, ['right'], FinalOptions) ; FinalOptions = NewOptions3),
+
+    % Juntar opções do mago com as da rocha
+    (HaveUsedLevitate = 0 ->
+        (Levitate = 1 -> get_same_options_levitate(FinalOptions, RockLevitateOptions, Options)
+         ; Options = FinalOptions
+        ) 
+    ; Options = FinalOptions).
+
+
+print_rocks(Rocks, Num) :-
+    Rocks = [H|T],
+    write(Num), write('. '), write(H), nl,
+    (
+        T \= [] -> 
+        (
+            Num1 is Num + 1,
+            print_rocks(T, Num1)
+        ) ; true
+    ).
+
+
+get_rock_position(RockIndex, Rocks, Position) :-
+    Rocks = [H|T],
+    (RockIndex \= 1 -> 
+        (
+            RockIndex1 is RockIndex - 1,
+            get_rock_position(RockIndex1, T, Position)
+        ) ; Position = H
+    ).
+
+
+get_same_options_levitate(SorcererOptions, RockOptions, FinalOptions) :-
+    (member('up', SorcererOptions), member('up', RockOptions) -> append([], ['up'], NewOptions) ; NewOptions = []),
+    (member('down', SorcererOptions), member('down', RockOptions) -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
+    (member('left', SorcererOptions), member('left', RockOptions) -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
+    (member('right', SorcererOptions), member('right', RockOptions) -> append(NewOptions3, ['right'], FinalOptions) ; FinalOptions = NewOptions3).
+
+
+check_rock_levitate_options(Position, Options) :-
+    (Row, Col) = Position,
+    RealRow is Row + 2,
+    RealCol is Col + 2,
+    UpRow is RealRow - 1,
+    DownRow is RealRow + 1,
+    LeftCol is RealCol - 1,
+    RightCol is RealCol + 1,
+    cell(UpRow, RealCol, PieceUp),
+    cell(DownRow, RealCol, PieceDown),
+    cell(RealRow, LeftCol, PieceLeft),
+    cell(RealRow, RightCol, PieceRight),
+
+    (member(PieceUp, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Up is 0
+        ;
+        Up is 1
+    ),
+    (member(PieceDown, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Down is 0
+        ;
+        Down is 1
+    ),
+    (member(PieceLeft, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Left is 0
+        ;
+        Left is 1
+    ),
+    (member(PieceRight, ['\\\\\\', '///', '|||', 'tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> Right is 0
+        ;
+        Right is 1
     ),
 
     (Up = 1 -> append([], ['up'], NewOptions) ; NewOptions = []),
     (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
     (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
+
