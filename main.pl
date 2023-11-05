@@ -12,7 +12,7 @@ play :-
     next_turn(player2, NewPlayer1, Game1, HaveUsedLevitate1, UsedLevitate1, StopLevitation),
     display_game(player2),
     check_used_levitate(HaveUsedLevitate1, UsedLevitate1, NewHaveUsedLevitate),
-    next_turn(player2, NewPlayer2, Game2, NewHaveUsedLevitate, UsedLevitate1, StopLevitation),    
+    next_turn(player2, NewPlayer2, Game2, NewHaveUsedLevitate, UsedLevitate1, StopLevitation),  
     playing(player1).
 
 

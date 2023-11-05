@@ -6,6 +6,8 @@
 :- dynamic actual_rocks/1.
 :- dynamic accumulatedlist/2.
 :- dynamic chosen_rock_position/1.
+:- dynamic rocks_touched/1.
+
 
 
 
@@ -539,7 +541,7 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, 
             read(Levitate),
             (
                 Levitate = 1 -> 
-                    Ok is  1,
+                    Ok is 1,
                     UsedLevitate is 1,
                     write('Which rock do you want to levitate?'), nl,
                     Num is 1,
@@ -552,7 +554,8 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, 
                     nth0(ListRockIndex, NewListOfOptions, FinalOptions),
                     ChosenRock = RockPosition,
                     Options = FinalOptions
-                ; Options = SrcOptions
+                ; Options = SrcOptions,
+                Ok is 0
             )
         ;
         (UsedLevitate = 1, Result = true, not_inst(StopLevitation))-> 
