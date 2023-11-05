@@ -39,10 +39,11 @@ assert_rock_piece(Piece, Position) :-
 
 
 retract_rock_piece(Piece, Position) :-
-    retract(rock_piece(Piece, Position)),
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
+    retractall(rock_piece(Piece, Position)),
+    retract_cell(RealRow, RealCol),
     assert_cell(RealRow, RealCol, '   ').
     
 
@@ -64,7 +65,7 @@ retract_player_piece(Player, Piece, Position) :-
     assert_cell(RealRow, RealCol, '   ').
 
 
-move_player_piece(Player, Piece, NewPlayer, Game) :-
+move(Player, Piece, NewPlayer, Game) :-
     player(Player), % Check if player exists
     player_piece(Player, Piece, Position), % Check if player has the piece
     (Row, Col) = Position,
@@ -89,12 +90,11 @@ tr_move(Position, NewPosition, Player, NewPlayer, Game) :-
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game))
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up',BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
+        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
+        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
+        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game))
     ).
-
 
 check_tr_options(Position, Options) :-
     (Row, Col) = Position,
@@ -129,6 +129,25 @@ check_tr_options(Position, Options) :-
     (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
     (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
+
+
+
+
+check_for_rock_pull(Position, ActualRocks, Direction, BackPosition) :-
+    write(ActualRocks), nl,
+    (member(BackPosition,ActualRocks)-> 
+        write('Do you want to pull the rock?(yes. or no.)'), nl,
+        read(Answer),
+        (
+            (Answer = 'yes' -> 
+            retract_rock_piece('_r_', BackPosition),
+            assert_rock_piece('_r_', Position),
+            Answer = 'no'-> true
+            )
+        )
+    );
+    true.
+
 
 
 check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game) :-

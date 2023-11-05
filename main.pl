@@ -4,24 +4,24 @@
 play :-
     initialize_board,
     initialize_players,
-    print_game_state(player1),
+    display_game(player1),
     next_turn(player1, NewPlayer, Game),
-    print_game_state(player2),
+    display_game(player2),
     next_turn(player2, NewPlayer1, Game1),
-    print_game_state(player2),
+    display_game(player2),
     next_turn(player2, NewPlayer2, Game2),    
     playing(player1).
 
 
 % Players have 3 moves
 playing(PlayerTurn) :-
-    print_game_state(PlayerTurn),
+    display_game(PlayerTurn),
     next_turn(PlayerTurn, NewPlayer, Game),
     check_turn_change(NewPlayer, PlayerTurn, Game),
-    print_game_state(PlayerTurn),
+    display_game(PlayerTurn),
     next_turn(PlayerTurn, NewPlayer1, Game1),
     check_turn_change(NewPlayer1, PlayerTurn, Game1),
-    print_game_state(PlayerTurn),
+    display_game(PlayerTurn),
     next_turn(PlayerTurn, NewPlayer2, Game2),
     check_turn_change(NewPlayer2, PlayerTurn, Game2),
     ( PlayerTurn = player1 -> NextPlayer = player2 ; NextPlayer = player1 ),
@@ -36,7 +36,7 @@ check_turn_change(NewPlayer, PlayerTurn, Game) :-
         (Game = splut, game_over(PlayerTurn))
     ).
 
-game_over(Player) :-
-    print_game_state(Player),
+game_over(Winner) :-
+    display_game(Winner),
     nl,write('        SPLUT!         '), nl, nl,
-    write(Player), write(' won!!!'), nl, nl.
+    write(Winner), write(' won!!!'), nl, nl.
