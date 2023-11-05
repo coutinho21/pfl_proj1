@@ -1,7 +1,14 @@
 # Practical Assignment 1 - 2023/2024 PFL
+# Splut
+
+> **Group**: Splut_7
+> 
+> **Members**:
+> - Guilherme nome todo Coutinho, up202108872 - XX%
+> - Xavier Ribeiro Outeiro, up202108895 - XX%
+
 
 ## Table of Contents
-- [Identification](#identification)
 - [Installation and Execution](#installation-and-execution)
 - [Description of the Game](#description-of-the-game)
 - [Game Logic](#game-logic)
@@ -13,24 +20,35 @@
   - [Game State Evaluation](#game-state-evaluation)
   - [Computer Plays](#computer-plays)
 - [Conclusions](#conclusions)
-- [Bibliography](##bibliography)
+- [Bibliography](#bibliography)
 
-## Identification
-- **Topic**: Game
-- **Group**: Group Designation
-- **Members**:
-  - Student 1 (Student Number 1, Full Name 1) - Contribution: X%
-  - Student 2 (Student Number 2, Full Name 2) - Contribution: Y%
-  - Student 3 (Student Number 3, Full Name 3) - Contribution: Z%
-  - (Include all group members with their student numbers and contributions)
+
   
 ## Installation and Execution
 To correctly execute the game in both Linux and Windows environments, follow these steps:
 - Step 1: Install SICStus Prolog 4.8.
-- Step 2: (Add installation steps specific to your game, e.g., downloading game files, dependencies, etc.)
+- Step 2: Fazer o download dos ficheiros presentes em PFL_TP1_T05_Splut7.zip e descompactá-los.
+- Step 3: Dentro do diretório src consulte o ficheiro main.pl através da linha de comandos ou pela própria UI do Sicstus Prolog 4.7.1.
+- Step 4: Para iniciar o jogo executa-se o predicado play/0
+```pl
+?- play.
+```
 
 ## Description of the Game
-(Insert a brief description of the game and its rules, up to 350 words. Include relevant links to official game websites, rule books, etc.)
+Splut! is a 2 player abstract board game. It is played on a diamond-shaped board. Each player starts with three pieces: a Stonetroll, a Dwarf, and a Sorcerer. 
+The objective is to eliminate the opposing Sorcerer by throwing a Rock at his head, resulting in the removal of the entire team.
+
+Players take turns, with each typically making three steps per turn, except for the first and second players who have limited steps initially. TThe pieces have different kind of moves:
+
+   - Stonetrolls: If a rock is right behind them they can pull it in the direction of their move and and throw Rocks by moving in to it space, they chose the direction for the thrown and them the rock moves in straight lines until it its an obstacle.
+
+   - Dwarves: Dwarves can push consecutive rows of pieces in a straight line during their moves.
+
+   - Sorcerers: Sorcerers can levitate Rocks that make the same move as them.
+
+Splut! requires careful planning and is a challenging board game that rewards clever and tactical gameplay.
+The game rules are [here](https://www.iggamecenter.com/en/rules/splut#board).
+
 
 ## Game Logic
 ### Internal Game State Representation
@@ -55,8 +73,14 @@ To correctly execute the game in both Linux and Windows environments, follow the
 (Describe how the computer chooses a move based on the level of difficulty. The predicate should be called `choose_move(+GameState, +Player, +Level, -Move)`. Define different levels of difficulty.)
 
 ## Conclusions
-(Provide conclusions about the work, including limitations and possible improvements, up to 250 words.)
+This work has proven to be a great way to learn both a new language and a different way of thinking, which was new to us. We believe that we have reinforced our prior knowledge and also expanded it.
+
+On the other hand, due to the fact that we also have numerous projects for other curricular units, we had insufficient time to fulfill all the requirements and to develop the game more in the way we intended to.
+
+We wanted to have implemented the Level2 of computer play, we thought on trying to always move troll to the closest position of the sorcerer line, or to try to move the rock to the closest position of the sorcerer line.
+
+Given our limited knowledge of this language, which has proven to be one of the challenging factors, it also contributed to the lack of time being the major difficulty in this project.
 
 ## Bibliography
-(List books, papers, web pages, and other resources used during the development of the assignment.)
-``
+The game rules were consulted [here](https://www.iggamecenter.com/en/rules/splut#board).
+
