@@ -5,6 +5,7 @@
 :- dynamic player_piece/3.
 :- dynamic actual_rocks/1.
 :- dynamic accumulatedlist/2.
+:- dynamic chosen_rock_position/1.
 
 
 
@@ -69,21 +70,21 @@ retract_player_piece(Player, Piece, Position) :-
     assert_cell(RealRow, RealCol, '   ').
 
 
-move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate) :-
+move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
     player(Player), % Check if player exists
     player_piece(Player, Piece, Position), % Check if player has the piece
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece), % Check if piece is in the board
-    choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate),
+    choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation),
     assert_player_piece(Player, Piece, NewPosition).
 
 
-choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate) :-
+choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
     ((Piece = 'tr1'; Piece = 'tr2'), retract_player_piece(Player, Piece, Position), tr_move(Position, NewPosition, Player, NewPlayer, Game));
     ((Piece = 'dw1'; Piece = 'dw2'), retract_player_piece(Player, Piece, Position), dw_move(Position, NewPosition));
-    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate)).
+    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate,StopLevitation)).
 
 
 tr_move(Position, NewPosition, Player, NewPlayer, Game) :-
@@ -459,22 +460,25 @@ check_dw_push(Direction, Row, Col, Result, Acc) :-
     ). 
 
 
-sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate) :-
+sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
     (Row, Col) = Position,
     write('Choose a direction to move:'), nl,
-    check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock),
+    check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, StopLevitation, Ok),
     (RockRow, RockCol) = ChosenRock,
     print_option(Options),
     read(Choice),
     (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow - 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow + 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow, NewRockCol is RockCol - 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), ((\+not_inst(UsedLevitate), UsedLevitate = 1, NewRockRow is RockRow, NewRockCol is RockCol + 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition)) ; true))
-    ).
+        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1 -> NewRockRow is RockRow - 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
+        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1->NewRockRow is RockRow + 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true ));
+        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol - 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
+        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol + 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true) )
+    ),
+    retractall(chosen_rock_position(_)),
+    (Ok = 1 -> asserta(chosen_rock_position(ChosenRockPositionAux)); true).
 
 
-check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock) :-
+
+check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, StopLevitation, Ok) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
@@ -528,15 +532,14 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock) 
 
     check_all_empty(FirstRockOptions,SecondRockOptions,ThirdRockOptions,FourthRockOptions, NewListOfOptions, Result, ListOfRocks, NewListOfRocks),
 
-    ( (HaveUsedLevitate = 0, Result = true ->
-        (
+    ( ((HaveUsedLevitate = 0, Result = true, not_inst(StopLevitation)) ->
             write('Do you want to use Levitate?'), nl,
             write('1. Yes'), nl,
             write('2. No'), nl,
             read(Levitate),
             (
                 Levitate = 1 -> 
-                (
+                    Ok is  1,
                     UsedLevitate is 1,
                     write('Which rock do you want to levitate?'), nl,
                     Num is 1,
@@ -549,9 +552,34 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock) 
                     nth0(ListRockIndex, NewListOfOptions, FinalOptions),
                     ChosenRock = RockPosition,
                     Options = FinalOptions
-                ) ; Options = SrcOptions
+                ; Options = SrcOptions
             )
-        ) ; Options = SrcOptions )
+        ;
+        (UsedLevitate = 1, Result = true, not_inst(StopLevitation))-> 
+            chosen_rock_position(ChosenRockPosition),
+            check_rock_levitate_options(ChosenRockPosition, ChosenRockOptions),
+            write('ChosenRockPosition33: '), write(ChosenRockPosition), nl,
+            get_same_options_levitate(SrcOptions, ChosenRockOptions, ChosenRockFinalOptions),
+            write('Do you want to stop Levitating?'), nl,
+            (ChosenRockFinalOptions = [] -> write('1. Yes'), nl; write('1. Yes'), nl, write('2. No'), nl),
+            read(Levitate),
+            (
+                Levitate = 1 -> 
+                    StopLevitation is 1,
+                    Options = SrcOptions,
+                    Ok is 0
+                ; 
+                ChosenRock = ChosenRockPosition,
+                Options = ChosenRockFinalOptions,
+                Ok is 1
+
+                
+            )
+
+        ; 
+            Options = SrcOptions,
+            Ok is 0
+        )
     ).
 
 
