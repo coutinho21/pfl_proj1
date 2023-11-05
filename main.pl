@@ -64,12 +64,11 @@ check_turn_change(NewPlayer, PlayerTurn, Game) :-
 game_over(Winner) :-
     display_game(Winner),
     nl,write('        SPLUT!         '), nl, nl,
-    write(Winner), write(' won!!!'), nl, nl.
+    write('       '),write(Winner), write(' won!!!'), nl, nl,
+    !.
 
 
 check_used_levitate(HaveUsedLevitate, UsedLevitate, NewHaveUsedLevitate) :-
-    write(HaveUsedLevitate), nl,
-    write(UsedLevitate), nl,
     (HaveUsedLevitate = 0 ->
         (not_inst(UsedLevitate) -> true ; UsedLevitate = 1 -> NewHaveUsedLevitate is 1 ; NewHaveUsedLevitate is 0)
         ;
