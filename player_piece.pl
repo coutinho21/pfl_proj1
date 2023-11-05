@@ -1,3 +1,5 @@
+:- use_module(library(lists)).
+
 :- dynamic player/1.
 :- dynamic rock_piece/2.
 :- dynamic player_piece/3.
@@ -459,9 +461,9 @@ check_dw_push(Direction, Row, Col, Result, Acc) :-
 
 sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate) :-
     (Row, Col) = Position,
+    write('Choose a direction to move:'), nl,
     check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock),
     (RockRow, RockCol) = ChosenRock,
-    write('Choose a direction to move:'), nl,
     print_option(Options),
     read(Choice),
     (
@@ -473,28 +475,6 @@ sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate) :-
 
 
 check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock) :-
-    (HaveUsedLevitate = 0 ->
-        (
-            write('Do you want to use Levitate?'), nl,
-            write('1. Yes'), nl,
-            write('2. No'), nl,
-            read(Levitate),
-            (
-                Levitate = 1 -> 
-                (
-                    UsedLevitate is 1,
-                    set_actual_rocks(ActualRocks),
-                    write('Which rock do you want to levitate?'), nl,
-                    Num is 1,
-                    print_rocks(ActualRocks, Num),
-                    read(RockIndex),
-                    get_rock_position(RockIndex, ActualRocks, RockPosition),
-                    check_rock_levitate_options(RockPosition, RockLevitateOptions),
-                    ChosenRock = RockPosition
-                ) ; true
-            )
-        ) ; true
-    ),
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
@@ -527,36 +507,81 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock) 
     (Up = 1 -> append([], ['up'], NewOptions) ; NewOptions = []),
     (Down = 1 -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
     (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
-    (Right = 1 -> append(NewOptions3, ['right'], FinalOptions) ; FinalOptions = NewOptions3),
+    (Right = 1 -> append(NewOptions3, ['right'], SrcOptions) ; SrcOptions = NewOptions3),
 
-    % Juntar opções do mago com as da rocha
-    (HaveUsedLevitate = 0 ->
-        (Levitate = 1 -> get_same_options_levitate(FinalOptions, RockLevitateOptions, Options)
-         ; Options = FinalOptions
-        ) 
-    ; Options = FinalOptions).
+    set_actual_rocks(ActualRocks),
+
+    check_rock_levitate_options_for_each(ActualRocks, RockLevitateOptions),
+
+    RockLevitateOptions = [(RockPosition1, OptionsForFirstRock), (RockPosition2, OptionsForSecondRock), (RockPosition3, OptionsForThirdRock), (RockPosition4, OptionsForFourthRock)],
+    ListOfRocks = [RockPosition1, RockPosition2, RockPosition3, RockPosition4],
 
 
-print_rocks(Rocks, Num) :-
-    Rocks = [H|T],
-    write(Num), write('. '), write(H), nl,
-    (
-        T \= [] -> 
+    get_same_options_levitate(SrcOptions, OptionsForFirstRock, FirstRockOptions),
+    get_same_options_levitate(SrcOptions, OptionsForSecondRock, SecondRockOptions),
+    get_same_options_levitate(SrcOptions, OptionsForThirdRock, ThirdRockOptions),
+    get_same_options_levitate(SrcOptions, OptionsForFourthRock, FourthRockOptions),
+    write('Options for first rock after get_same_options_levitate: '), write(FirstRockOptions), nl, 
+    write('Options for second rock after get_same_options_levitate: '), write(SecondRockOptions), nl,
+    write('Options for third rock after get_same_options_levitate: '), write(ThirdRockOptions), nl,
+    write('Options for fourth rock after get_same_options_levitate: '), write(FourthRockOptions), nl,
+
+    check_all_empty(FirstRockOptions,SecondRockOptions,ThirdRockOptions,FourthRockOptions, NewListOfOptions, Result, ListOfRocks, NewListOfRocks),
+
+    ( (HaveUsedLevitate = 0, Result = true ->
         (
-            Num1 is Num + 1,
-            print_rocks(T, Num1)
-        ) ; true
+            write('Do you want to use Levitate?'), nl,
+            write('1. Yes'), nl,
+            write('2. No'), nl,
+            read(Levitate),
+            (
+                Levitate = 1 -> 
+                (
+                    UsedLevitate is 1,
+                    write('Which rock do you want to levitate?'), nl,
+                    Num is 1,
+                    print_rocks(NewListOfRocks, Num),
+                    read(RockIndex),
+                    get_rock_position(RockIndex, NewListOfRocks, RockPosition),
+                    write('Rock index: '), write(RockIndex), nl,
+                    write('Rock position: '), write(RockPosition), nl,
+                    ListRockIndex is RockIndex - 1,
+                    nth0(ListRockIndex, NewListOfOptions, FinalOptions),
+                    ChosenRock = RockPosition,
+                    Options = FinalOptions
+                ) ; Options = SrcOptions
+            )
+        ) ; Options = SrcOptions )
     ).
 
 
-get_rock_position(RockIndex, Rocks, Position) :-
-    Rocks = [H|T],
-    (RockIndex \= 1 -> 
-        (
-            RockIndex1 is RockIndex - 1,
-            get_rock_position(RockIndex1, T, Position)
-        ) ; Position = H
-    ).
+
+check_all_empty(FirstRockOptions,SecondRockOptions,ThirdRockOptions,FourthRockOptions, NewListOfOptions, Result, ListOfRocks, NewListOfRocks) :-
+    ListOfRocks = [RockPosition1, RockPosition2, RockPosition3, RockPosition4],
+    (FirstRockOptions = [] -> One is 1 ; One is 0),
+    (SecondRockOptions = [] -> Two is 1 ; Two is 0),
+    (ThirdRockOptions = [] -> Three is 1 ; Three is 0),
+    (FourthRockOptions = [] -> Four is 1 ; Four is 0),
+    (One= 0 -> append([], [RockPosition1], NewRocks) ; NewRocks = []),
+    (Two = 0 -> append(NewRocks, [RockPosition2], NewRocks2) ; NewRocks2 = NewRocks),
+    (Three = 0 -> append(NewRocks2, [RockPosition3], NewRocks3) ; NewRocks3 = NewRocks2),
+    (Four = 0 -> append(NewRocks3, [RockPosition4], NewListOfRocks) ; NewListOfRocks = NewRocks3),
+    (One= 0 -> append([], [FirstRockOptions], NewOptions) ; NewOptions = []),
+    (Two = 0 -> append(NewOptions, [SecondRockOptions], NewOptions2) ; NewOptions2 = NewOptions),
+    (Three = 0 -> append(NewOptions2, [ThirdRockOptions], NewOptions3) ; NewOptions3 = NewOptions2),
+    (Four = 0 -> append(NewOptions3, [FourthRockOptions], NewListOfOptions) ; NewListOfOptions = NewOptions3),
+    (NewListOfRocks = [] -> Result = false ; Result = true),
+    write('NewListOfRocks: '), write(NewListOfRocks), nl,
+    write('NewListOfOptions: '), write(NewListOfOptions), nl.
+    
+
+
+check_rock_levitate_options_for_each([], []).
+check_rock_levitate_options_for_each([RockPosition | RestOfRocks], [ (RockPosition,RockLevitateOption) | RestOfOptions] ):-
+    check_rock_levitate_options(RockPosition, RockLevitateOption),
+    check_rock_levitate_options_for_each(RestOfRocks, RestOfOptions).
+
+
 
 
 get_same_options_levitate(SorcererOptions, RockOptions, FinalOptions) :-
@@ -601,3 +626,25 @@ check_rock_levitate_options(Position, Options) :-
     (Left = 1 -> append(NewOptions2, ['left'], NewOptions3) ; NewOptions3 = NewOptions2),
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
+
+    print_rocks(Rocks, Num) :-
+        Rocks = [H|T],
+        write(Num), write('. '), write(H), nl,
+        (
+            T \= [] -> 
+            (
+                Num1 is Num + 1,
+                print_rocks(T, Num1)
+            ) ; true
+        ).
+    
+    
+    get_rock_position(RockIndex, Rocks, Position) :-
+        Rocks = [H|T],
+        (RockIndex \= 1 -> 
+            (
+                RockIndex1 is RockIndex - 1,
+                get_rock_position(RockIndex1, T, Position)
+            ) ; Position = H
+        ).
+    

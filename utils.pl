@@ -26,3 +26,7 @@ print_option(Options) :-
 not_inst(Var) :-
   \+(\+(Var=0)),
   \+(\+(Var=1)).
+
+remove( _, [], []).
+remove( R, [R|T], T).
+remove( R, [H|T], [H|T2]) :- H \= R, remove( R, T, T2).
