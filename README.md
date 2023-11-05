@@ -4,24 +4,8 @@
 > **Group**: Splut_7
 > 
 > **Members**:
-> - Guilherme nome todo Coutinho, up202108872 - XX%
-> - Xavier Ribeiro Outeiro, up202108895 - XX%
-
-
-## Table of Contents
-- [Installation and Execution](#installation-and-execution)
-- [Description of the Game](#description-of-the-game)
-- [Game Logic](#game-logic)
-  - [Internal Game State Representation](#internal-game-state-representation)
-  - [Game State Visualization](#game-state-visualization)
-  - [Move Validation and Execution](#move-validation-and-execution)
-  - [List of Valid Moves](#list-of-valid-moves)
-  - [End of Game](#end-of-game)
-  - [Game State Evaluation](#game-state-evaluation)
-  - [Computer Plays](#computer-plays)
-- [Conclusions](#conclusions)
-- [Bibliography](#bibliography)
-
+> - Guilherme Correia da Silva Coutinho, up202108872 - 50%
+> - Xavier Ribeiro Outeiro, up202108895 - 50%
 
   
 ## Installation and Execution
