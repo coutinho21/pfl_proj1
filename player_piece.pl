@@ -72,35 +72,49 @@ retract_player_piece(Player, Piece, Position) :-
     assert_cell(RealRow, RealCol, '   ').
 
 
-move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
+move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation, IsComputer) :-
     player(Player), % Check if player exists
     player_piece(Player, Piece, Position), % Check if player has the piece
     (Row, Col) = Position,
     RealRow is Row + 2,
     RealCol is Col + 2,
     cell(RealRow, RealCol, Piece), % Check if piece is in the board
-    choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation),
+    choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation, IsComputer),
     assert_player_piece(Player, Piece, NewPosition).
 
 
-choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
-    ((Piece = 'tr1'; Piece = 'tr2'), retract_player_piece(Player, Piece, Position), tr_move(Position, NewPosition, Player, NewPlayer, Game));
+choose_move(Piece, Position, NewPosition, Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation, IsComputer) :-
+    ((Piece = 'tr1'; Piece = 'tr2'), retract_player_piece(Player, Piece, Position), tr_move(Position, NewPosition, Player, NewPlayer, Game, IsComputer));
     ((Piece = 'dw1'; Piece = 'dw2'), retract_player_piece(Player, Piece, Position), dw_move(Position, NewPosition));
-    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate,StopLevitation)).
+    ((Piece = 'sr1'; Piece = 'sr2'), retract_player_piece(Player, Piece, Position), sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation)).
 
 
-tr_move(Position, NewPosition, Player, NewPlayer, Game) :-
+tr_move(Position, NewPosition, Player, NewPlayer, Game, IsComputer) :-
     (Row, Col) = Position,
     set_actual_rocks(ActualRocks),
-    write('Choose a direction to move:'), nl,
     check_tr_options(Position, Options),
-    print_option(Options),
-    read(Choice),
-    (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game))
+    (IsComputer = 0 ->
+        (
+            write('Choose a direction to move:'), nl,
+            print_option(Options),
+            read(Choice),
+            (
+                (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition, IsComputer),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer))
+            )
+        )
+        ;
+        (
+            random_select(Options, Choice),
+            (
+                (Choice = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition, IsComputer),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer))
+            )
+        )
     ).
 
 
@@ -140,42 +154,47 @@ check_tr_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-check_for_rock_pull(Position, ActualRocks, Direction, BackPosition) :-
+check_for_rock_pull(Position, ActualRocks, Direction, BackPosition, IsComputer) :-
     write(ActualRocks), nl,
-    (member(BackPosition,ActualRocks)-> 
-        write('Do you want to pull the rock?(yes. or no.)'), nl,
-        read(Answer),
-        (
-            (Answer = 'yes' -> 
-            retract_rock_piece('_r_', BackPosition),
-            assert_rock_piece('_r_', Position),
-            Answer = 'no'-> true
-            )
-        )
-    );
-    true.
-
-
-check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game) :-
-    ( member(NewPosition, ActualRocks) -> 
-        write('In what direction do you want to throw the rock?'), nl,
-        check_rock_throw_options(NewPosition, Options),
-        print_option(Options),
-        read(Choice),
-        (
-            (Choice = 1, member('up', Options), Answer = 'up');
-            (Choice = 2, member('down', Options), Answer = 'down');
-            (Choice = 3, member('left', Options), Answer = 'left');
-            (Choice = 4, member('right', Options), Answer = 'right'); true
+    (member(BackPosition, ActualRocks)-> 
+        (IsComputer = 0 ->
+            (
+                write('Do you want to pull the rock?(yes. or no.)'), nl,
+                read(Answer)
+            ) ; random_select(['yes', 'no'], Answer)
         ),
-        (
-            (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
-            throw_rock(NewPosition, Answer, Game),
-            (Player = player1 -> NewPlayer = player2 ; NewPlayer = player1)
+        (Answer = 'yes' -> 
+            (
+                retract_rock_piece('_r_', BackPosition),
+                assert_rock_piece('_r_', Position)
+            ) ; true   
         )
-        ;
-        NewPlayer = Player
-        
+    ) ; true.
+
+
+check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer) :-
+    ( member(NewPosition, ActualRocks) -> 
+        (
+            check_rock_throw_options(NewPosition, Options),
+            (IsComputer = 0 ->
+                (
+                    write('In what direction do you want to throw the rock?'), nl,
+                    print_option(Options),
+                    read(Choice)
+                ) ; random_select(Options, Choice)
+            ),
+            (
+                (Choice = 1, member('up', Options), Answer = 'up');
+                (Choice = 2, member('down', Options), Answer = 'down');
+                (Choice = 3, member('left', Options), Answer = 'left');
+                (Choice = 4, member('right', Options), Answer = 'right'); true
+            ),
+            (
+                (Answer = 'up'; Answer = 'down'; Answer = 'left'; Answer = 'right') ->
+                throw_rock(NewPosition, Answer, Game),
+                (Player = player1 -> NewPlayer = player2 ; NewPlayer = player1)
+            )
+        ) ; NewPlayer = Player
     ).
 
 
@@ -459,7 +478,7 @@ check_dw_push(Direction, Row, Col, Result, Acc) :-
                     Result = true
             )
         )
-    ). 
+    ).
 
 
 sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
@@ -477,7 +496,6 @@ sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation) :
     ),
     retractall(chosen_rock_position(_)),
     (Ok = 1 -> asserta(chosen_rock_position(ChosenRockPositionAux)); true).
-
 
 
 check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, StopLevitation, Ok) :-
@@ -586,33 +604,29 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, 
     ).
 
 
-
 check_all_empty(FirstRockOptions,SecondRockOptions,ThirdRockOptions,FourthRockOptions, NewListOfOptions, Result, ListOfRocks, NewListOfRocks) :-
     ListOfRocks = [RockPosition1, RockPosition2, RockPosition3, RockPosition4],
     (FirstRockOptions = [] -> One is 1 ; One is 0),
     (SecondRockOptions = [] -> Two is 1 ; Two is 0),
     (ThirdRockOptions = [] -> Three is 1 ; Three is 0),
     (FourthRockOptions = [] -> Four is 1 ; Four is 0),
-    (One= 0 -> append([], [RockPosition1], NewRocks) ; NewRocks = []),
+    (One = 0 -> append([], [RockPosition1], NewRocks) ; NewRocks = []),
     (Two = 0 -> append(NewRocks, [RockPosition2], NewRocks2) ; NewRocks2 = NewRocks),
     (Three = 0 -> append(NewRocks2, [RockPosition3], NewRocks3) ; NewRocks3 = NewRocks2),
     (Four = 0 -> append(NewRocks3, [RockPosition4], NewListOfRocks) ; NewListOfRocks = NewRocks3),
-    (One= 0 -> append([], [FirstRockOptions], NewOptions) ; NewOptions = []),
+    (One = 0 -> append([], [FirstRockOptions], NewOptions) ; NewOptions = []),
     (Two = 0 -> append(NewOptions, [SecondRockOptions], NewOptions2) ; NewOptions2 = NewOptions),
     (Three = 0 -> append(NewOptions2, [ThirdRockOptions], NewOptions3) ; NewOptions3 = NewOptions2),
     (Four = 0 -> append(NewOptions3, [FourthRockOptions], NewListOfOptions) ; NewListOfOptions = NewOptions3),
     (NewListOfRocks = [] -> Result = false ; Result = true),
     write('NewListOfRocks: '), write(NewListOfRocks), nl,
     write('NewListOfOptions: '), write(NewListOfOptions), nl.
-    
 
 
 check_rock_levitate_options_for_each([], []).
 check_rock_levitate_options_for_each([RockPosition | RestOfRocks], [ (RockPosition,RockLevitateOption) | RestOfOptions] ):-
     check_rock_levitate_options(RockPosition, RockLevitateOption),
     check_rock_levitate_options_for_each(RestOfRocks, RestOfOptions).
-
-
 
 
 get_same_options_levitate(SorcererOptions, RockOptions, FinalOptions) :-
@@ -658,24 +672,24 @@ check_rock_levitate_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-    print_rocks(Rocks, Num) :-
-        Rocks = [H|T],
-        write(Num), write('. '), write(H), nl,
+print_rocks(Rocks, Num) :-
+    Rocks = [H|T],
+    write(Num), write('. '), write(H), nl,
+    (
+        T \= [] -> 
         (
-            T \= [] -> 
-            (
-                Num1 is Num + 1,
-                print_rocks(T, Num1)
-            ) ; true
-        ).
-    
-    
-    get_rock_position(RockIndex, Rocks, Position) :-
-        Rocks = [H|T],
-        (RockIndex \= 1 -> 
-            (
-                RockIndex1 is RockIndex - 1,
-                get_rock_position(RockIndex1, T, Position)
-            ) ; Position = H
-        ).
-    
+            Num1 is Num + 1,
+            print_rocks(T, Num1)
+        ) ; true
+    ).
+
+
+get_rock_position(RockIndex, Rocks, Position) :-
+    Rocks = [H|T],
+    (RockIndex \= 1 -> 
+        (
+            RockIndex1 is RockIndex - 1,
+            get_rock_position(RockIndex1, T, Position)
+        ) ; Position = H
+    ).
+

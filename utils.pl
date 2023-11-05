@@ -1,9 +1,12 @@
+:- use_module(library(random)).
+
 printlist([]).
 printlist([X|Xs]) :-
     write('Rock Position at: '),
     write(X),
     nl,
     printlist(Xs).
+
 
 print_option(Options) :-
     ([H|T] = Options ; H = []),
@@ -27,6 +30,14 @@ not_inst(Var) :-
   \+(\+(Var=0)),
   \+(\+(Var=1)).
 
+
 remove( _, [], []).
 remove( R, [R|T], T).
 remove( R, [H|T], [H|T2]) :- H \= R, remove( R, T, T2).
+
+
+random_select(List, Element) :-
+    length(List, Length),
+    NewLength is Length + 1,
+    random(1, NewLength, RandomIndex),
+    nth1(RandomIndex, List, Element).
