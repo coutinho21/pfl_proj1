@@ -63,9 +63,9 @@ check_turn_change(NewPlayer, PlayerTurn, Game) :-
 
 game_over(Winner) :-
     display_game(Winner),
-    nl,write('        SPLUT!         '), nl, nl,
-    write('       '),write(Winner), write(' won!!!'), nl, nl,
-    !.
+    nl, write('        SPLUT!         '), nl, nl,
+    write('       '), write(Winner), write(' won!!!'), nl,
+    halt.
 
 
 check_used_levitate(HaveUsedLevitate, UsedLevitate, NewHaveUsedLevitate) :-
@@ -84,6 +84,7 @@ player_vs_computer :-
     HaveUsedLevitate1 is 0,
     next_turn_ai_level1(player2, NewPlayer1, Game1, HaveUsedLevitate1, UsedLevitate1, StopLevitation),
     display_game(player2),
+    sleep_seconds(1000),
     check_used_levitate(HaveUsedLevitate1, UsedLevitate1, NewHaveUsedLevitate),
     next_turn_ai_level1(player2, NewPlayer2, Game2, NewHaveUsedLevitate, UsedLevitate1, StopLevitation),  
     playing_vs_computer(player1, 0).
@@ -93,17 +94,27 @@ player_vs_computer :-
 playing_vs_computer(PlayerTurn, IsComputer) :-
     HaveUsedLevitate is 0,
     display_game(PlayerTurn),
+    (IsComputer = 1 -> sleep_seconds(1000) ; true),
     check_used_levitate(HaveUsedLevitate, UsedLevitate, NewHaveUsedLevitate),
     (IsComputer = 1 -> next_turn_ai_level1(PlayerTurn, NewPlayer, Game, NewHaveUsedLevitate, UsedLevitate, StopLevitation) ; next_turn(PlayerTurn, NewPlayer, Game, NewHaveUsedLevitate, UsedLevitate, StopLevitation)),
-    check_turn_change(NewPlayer, PlayerTurn, Game),
+    check_turn_change_with_computer(NewPlayer, PlayerTurn, Game),
     display_game(PlayerTurn),
+    (IsComputer = 1 -> sleep_seconds(1000) ; true),
     check_used_levitate(NewHaveUsedLevitate, UsedLevitate, NewHaveUsedLevitate1),
     (IsComputer = 1 -> next_turn_ai_level1(PlayerTurn, NewPlayer1, Game1, NewHaveUsedLevitate1, UsedLevitate, StopLevitation) ; next_turn(PlayerTurn, NewPlayer1, Game1, NewHaveUsedLevitate1, UsedLevitate, StopLevitation)),
-    check_turn_change(NewPlayer1, PlayerTurn, Game1),
+    check_turn_change_with_computer(NewPlayer1, PlayerTurn, Game1),
     display_game(PlayerTurn),
+    (IsComputer = 1 -> sleep_seconds(1000) ; true),
     check_used_levitate(NewHaveUsedLevitate1, UsedLevitate, NewHaveUsedLevitate2),
     (IsComputer = 1 -> next_turn_ai_level1(PlayerTurn, NewPlayer2, Game2, NewHaveUsedLevitate2, UsedLevitate, StopLevitation) ; next_turn(PlayerTurn, NewPlayer2, Game2, NewHaveUsedLevitate2, UsedLevitate, StopLevitation)),
-    check_turn_change(NewPlayer2, PlayerTurn, Game2),
+    check_turn_change_with_computer(NewPlayer2, PlayerTurn, Game2),
     ( PlayerTurn = player1 -> (NextPlayer = player2, NewIsComputer = 1) ; (NextPlayer = player1, NewIsComputer = 0)),
     playing_vs_computer(NextPlayer, NewIsComputer).
 
+% Check if the turn needs to be changed with computer
+check_turn_change_with_computer(NewPlayer, PlayerTurn, Game) :-
+    (
+        not_inst(Game) -> (NewPlayer = PlayerTurn -> true ; ((NewPlayer = player2 -> NewIsCumputer is 1 ; NewIsComputer is 0), playing_vs_computer(NewPlayer, NewIsCumputer)))
+        ;
+        (Game = splut, game_over(PlayerTurn))
+    ).

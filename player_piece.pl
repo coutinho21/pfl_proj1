@@ -108,11 +108,12 @@ tr_move(Position, NewPosition, Player, NewPlayer, Game, IsComputer) :-
         ;
         (
             random_select(Options, Choice),
+            write(Choice), nl,
             (
-                (Choice = 'up', NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
-                (Choice = 'down', NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
-                (Choice = 'left', NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
-                (Choice = 'right', NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition, IsComputer),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer))
+                (Choice = up, NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = down, NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = left, NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col + 1, BackPosition=(BackRow,BackCol),  check_for_rock_pull(Position, ActualRocks, 'left', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
+                (Choice = right, NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol),BackRow is Row, BackCol is Col -1, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'right', BackPosition, IsComputer),check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer))
             )
         )
     ).
@@ -305,32 +306,42 @@ check_throw_collision(NewPosition, Result) :-
 % dwarf moves which includes pushing pieces
 dw_move(Position, NewPosition, IsComputer) :-
     (Row, Col) = Position,
-    assert(accumulatedlist('up',[])),
-    assert(accumulatedlist('down',[])),
-    assert(accumulatedlist('left',[])),
-    assert(accumulatedlist('right',[])),
+    assert(accumulatedlist('up', [])),
+    assert(accumulatedlist('down', [])),
+    assert(accumulatedlist('left', [])),
+    assert(accumulatedlist('right', [])),
     check_dw_options(Position, Options),
-    accumulatedlist('up',AccumulatedList1),
-    accumulatedlist('down',AccumulatedList2),
-    accumulatedlist('left',AccumulatedList3),
-    accumulatedlist('right',AccumulatedList4),
-    retractall(accumulatedlist('up',_)),
-    retractall(accumulatedlist('down',_)),
-    retractall(accumulatedlist('left',_)),
-    retractall(accumulatedlist('right',_)),
+    accumulatedlist('up', AccumulatedList1),
+    accumulatedlist('down', AccumulatedList2),
+    accumulatedlist('left', AccumulatedList3),
+    accumulatedlist('right', AccumulatedList4),
+    retractall(accumulatedlist('up', _)),
+    retractall(accumulatedlist('down', _)),
+    retractall(accumulatedlist('left', _)),
+    retractall(accumulatedlist('right', _)),
 
     (IsComputer = 0 ->
         (
             write('Choose a direction to move:'), nl,
             print_option(Options),
-            read(Choice)
-        ) ; random_select(Options, Choice)
-    ),
-    (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('up', NewPosition, AccumulatedList1));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('down', NewPosition, AccumulatedList2));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), move_accumulated_list('left', Newosition, AccumulatedList3));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), move_accumulated_list('right', NewPosition, AccumulatedList4))
+            read(Choice),
+            (
+                (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('up', NewPosition, AccumulatedList1));
+                (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('down', NewPosition, AccumulatedList2));
+                (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), move_accumulated_list('left', Newosition, AccumulatedList3));
+                (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), move_accumulated_list('right', NewPosition, AccumulatedList4))
+            )
+        )
+        ;
+        (
+            random_select(Options, Choice),
+            (
+                (Choice = up, NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('up', NewPosition, AccumulatedList1));
+                (Choice = down, NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), move_accumulated_list('down', NewPosition, AccumulatedList2));
+                (Choice = left, NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), move_accumulated_list('left', NewPosition, AccumulatedList3));
+                (Choice = right, NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), move_accumulated_list('right', NewPosition, AccumulatedList4))
+            )
+        )
     ).
 
 
@@ -367,7 +378,7 @@ check_dw_options(Position, Options) :-
         (
             member(PieceUp, ['tr1', 'tr2', 'sr1', 'sr2', 'dw1', 'dw2', '_r_']) -> 
             (
-            check_dw_push('up', UpRow, RealCol,Result, Acc ), (Result = true -> Up is 1 ; Up is 0)
+                check_dw_push('up', UpRow, RealCol,Result, Acc ), (Result = true -> Up is 1 ; Up is 0)
             )
             ;
             Up is 1
@@ -502,14 +513,24 @@ sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation, I
         (
             write('Choose a direction to move:'), nl,
             print_option(Options),
-            read(Choice)
-        ) ; random_select(Options, Choice)
-    ),
-    (
-        (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1 -> NewRockRow is RockRow - 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
-        (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1->NewRockRow is RockRow + 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true ));
-        (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol - 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
-        (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol + 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true) )
+            read(Choice),
+            (
+                (Choice = 1, member('up', Options), NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1 -> NewRockRow is RockRow - 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
+                (Choice = 2, member('down', Options), NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1 -> NewRockRow is RockRow + 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true ));
+                (Choice = 3, member('left', Options), NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), (Ok = 1 -> NewRockRow is RockRow, NewRockCol is RockCol - 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
+                (Choice = 4, member('right', Options), NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol + 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true))
+            )
+        )
+        ; 
+        (
+            random_select(Options, Choice),
+            (
+                (Choice = up, NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1 -> NewRockRow is RockRow - 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
+                (Choice = down, NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol), (Ok = 1->NewRockRow is RockRow + 1, NewRockCol is RockCol, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true ));
+                (Choice = left, NewRow is Row, NewCol is Col - 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol - 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true));
+                (Choice = right, NewRow is Row, NewCol is Col + 1, NewPosition = (NewRow, NewCol), (Ok = 1-> NewRockRow is RockRow, NewRockCol is RockCol + 1, NewRockPosition = (NewRockRow, NewRockCol), retract_rock_piece('_r_', ChosenRock), assert_rock_piece('_r_', NewRockPosition),ChosenRockPositionAux = NewRockPosition; true))
+            )
+        )
     ),
     retractall(chosen_rock_position(_)),
     (Ok = 1 -> asserta(chosen_rock_position(ChosenRockPositionAux)); true).
@@ -586,9 +607,14 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, 
                             write('Which rock do you want to levitate?'), nl,
                             print_rocks(NewListOfRocks, Num),
                             read(RockIndex)
-                        ) ; random_select(NewListOfRocks, RockIndex)
+                        )
+                        ; 
+                        (
+                            length(NewListOfRocks, Length),
+                            NewLength is Length + 1,
+                            random(1, NewLength, RockIndex)
+                        )
                     ),
-
                     get_rock_position(RockIndex, NewListOfRocks, RockPosition),
                     ListRockIndex is RockIndex - 1,
                     nth0(ListRockIndex, NewListOfOptions, FinalOptions),

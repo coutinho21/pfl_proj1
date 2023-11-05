@@ -80,13 +80,11 @@ next_turn_ai_level1(Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, Sto
     ;
         (
             random(1, 4, Choice),
-            write('Choice: '), write(Choice), nl,
             (
                 Choice = 1, Piece = 'tr2';
                 Choice = 2, Piece = 'dw2';
                 Choice = 3, Piece = 'sr2'
             )
-            write('Piece: '), write(Piece), nl
         )
     ),
     move(Player, Piece, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation, 1).

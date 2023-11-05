@@ -38,6 +38,14 @@ remove( R, [H|T], [H|T2]) :- H \= R, remove( R, T, T2).
 
 random_select(List, Element) :-
     length(List, Length),
-    NewLength is Length + 1,
-    random(1, NewLength, RandomIndex),
-    nth1(RandomIndex, List, Element).
+    random(0, Length, Index),
+    nth0(Index, List, Element).
+
+
+sleep_seconds(N) :-
+    statistics(runtime, [Start|_]),
+    End is Start + N,
+    repeat,
+    statistics(runtime, [Current|_]),
+    (Current >= End -> true ; fail).
+
