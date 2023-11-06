@@ -1,5 +1,6 @@
 :- use_module(library(random)).
 
+
 printlist([]).
 printlist([X|Xs]) :-
     write('Rock Position at: '),

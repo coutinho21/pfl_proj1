@@ -115,7 +115,7 @@ tr_move(Position, NewPosition, Player, NewPlayer, Game, IsComputer) :-
     ).
 
 
-%checks possible options for troll move and puts them in a list
+% checks possible options for troll move and puts them in a list
 check_tr_options(Position, Options) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
@@ -152,7 +152,7 @@ check_tr_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-%checks if there is a rock to pull and asks the player if he wants to pull it
+% checks if there is a rock to pull and asks the player if he wants to pull it
 check_for_rock_pull(Position, ActualRocks, Direction, BackPosition, IsComputer) :-
     (member(BackPosition, ActualRocks)-> 
         (IsComputer = 0 ->
@@ -172,7 +172,7 @@ check_for_rock_pull(Position, ActualRocks, Direction, BackPosition, IsComputer) 
     ) ; true.
 
 
-%checks if there is a rock to throw in the new position and asks the player in what direction he wants to throw it
+% checks if there is a rock to throw in the new position and asks the player in what direction he wants to throw it
 check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer) :-
     ( member(NewPosition, ActualRocks) -> 
         (
@@ -199,7 +199,7 @@ check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComput
     ).
 
 
-%checks possible options for rock throw and puts them in a list
+% checks possible options for rock throw and puts them in a list
 check_rock_throw_options(Position, Options) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
@@ -284,7 +284,7 @@ move_rock_until_obstacle(RockPosition, Direction, Game) :-
     ).
 
 
-%checks if the rock collides with NewPosition
+% checks if the rock collides with NewPosition
 check_throw_collision(NewPosition, Result) :-
     (Row, Col) = NewPosition,
     RealRow is Row + 2,
@@ -342,7 +342,7 @@ dw_move(Position, NewPosition, IsComputer) :-
     ).
 
 
-%recursive function that moves the pieces accumulated in the list
+% recursive function that moves the pieces accumulated in the list
 move_accumulated_list(_, _, []).
 move_accumulated_list(Direction, InitialPosition, [Piece|Rest]) :-
     (Row, Col) = InitialPosition,
@@ -356,7 +356,7 @@ move_accumulated_list(Direction, InitialPosition, [Piece|Rest]) :-
     move_accumulated_list(Direction, NewPosition, Rest).
 
 
-%checks possible options for dwarf move and puts them in a list
+% checks possible options for dwarf move and puts them in a list
 check_dw_options(Position, Options) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
@@ -500,7 +500,7 @@ check_dw_push(Direction, Row, Col, Result, Acc) :-
     ).
 
 
-% Sorcerer moves which includes levitation
+% sorcerer moves which includes levitation
 sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation, IsComputer) :-
     (Row, Col) = Position,
     check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, StopLevitation, Ok, IsComputer),
@@ -533,7 +533,7 @@ sr_move(Position, NewPosition, HaveUsedLevitate, UsedLevitate, StopLevitation, I
     (Ok = 1 -> asserta(chosen_rock_position(ChosenRockPositionAux)); true).
 
 
-%checks possible options for sorcerer move and puts them in a list, also checks previous moves to see if levitation is possible
+% checks possible options for sorcerer move and puts them in a list, also checks previous moves to see if levitation is possible
 check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, StopLevitation, Ok, IsComputer) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
@@ -653,7 +653,7 @@ check_sr_options(Position, Options, HaveUsedLevitate, UsedLevitate, ChosenRock, 
     ).
 
 
-%checks all the rocks options to see if they are empty, and add them to a new list if they are not
+% checks all the rocks options to see if they are empty, and add them to a new list if they are not
 check_all_empty(FirstRockOptions,SecondRockOptions,ThirdRockOptions,FourthRockOptions, NewListOfOptions, Result, ListOfRocks, NewListOfRocks) :-
     ListOfRocks = [RockPosition1, RockPosition2, RockPosition3, RockPosition4],
     (FirstRockOptions = [] -> One is 1 ; One is 0),
@@ -671,7 +671,7 @@ check_all_empty(FirstRockOptions,SecondRockOptions,ThirdRockOptions,FourthRockOp
     (NewListOfRocks = [] -> Result = false ; Result = true).
     
 
-%recursive function that checks all the rocks moves options, and add them to a listof lists
+% recursive function that checks all the rocks moves options, and add them to a listof lists
 check_rock_levitate_options_for_each([], []).
 check_rock_levitate_options_for_each([RockPosition | RestOfRocks], [ (RockPosition,RockLevitateOption) | RestOfOptions] ):-
     check_rock_levitate_options(RockPosition, RockLevitateOption),
@@ -679,7 +679,7 @@ check_rock_levitate_options_for_each([RockPosition | RestOfRocks], [ (RockPositi
 
 
 
-%compares the options of the rock and the sorcerer and puts them in a list
+% compares the options of the rock and the sorcerer and puts them in a list
 get_same_options_levitate(SorcererOptions, RockOptions, FinalOptions) :-
     (member('up', SorcererOptions), member('up', RockOptions) -> append([], ['up'], NewOptions) ; NewOptions = []),
     (member('down', SorcererOptions), member('down', RockOptions) -> append(NewOptions, ['down'], NewOptions2) ; NewOptions2 = NewOptions),
@@ -687,7 +687,7 @@ get_same_options_levitate(SorcererOptions, RockOptions, FinalOptions) :-
     (member('right', SorcererOptions), member('right', RockOptions) -> append(NewOptions3, ['right'], FinalOptions) ; FinalOptions = NewOptions3).
 
 
-%checks the options for where the rock can move
+% checks the options for where the rock can move
 check_rock_levitate_options(Position, Options) :-
     (Row, Col) = Position,
     RealRow is Row + 2,
@@ -724,7 +724,7 @@ check_rock_levitate_options(Position, Options) :-
     (Right = 1 -> append(NewOptions3, ['right'], Options) ; Options = NewOptions3).
 
 
-%prints the rocks that the user can choose to levitate
+% prints the rocks that the user can choose to levitate
 print_rocks(Rocks, Num) :-
     Rocks = [H|T],
     write(Num), write('. '), write(H), nl,
@@ -737,7 +737,7 @@ print_rocks(Rocks, Num) :-
     ).
 
 
-%gets the rock from the list of rocks based on the index provided by the user
+% gets the rock from the list of rocks based on the index provided by the user
 get_rock_position(RockIndex, Rocks, Position) :-
     Rocks = [H|T],
     (RockIndex \= 1 -> 

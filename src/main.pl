@@ -33,7 +33,7 @@ player_vs_player :-
     playing(player1).
 
 
-% Players have 3 moves
+% players have 3 moves
 playing(PlayerTurn) :-
     HaveUsedLevitate is 0,
     display_game(PlayerTurn),
@@ -52,7 +52,7 @@ playing(PlayerTurn) :-
     playing(NextPlayer).
 
 
-% Check if the turn needs to be changed
+% check if the turn needs to be changed
 check_turn_change(NewPlayer, PlayerTurn, Game) :-
     (
         not_inst(Game) -> (NewPlayer = PlayerTurn -> true ; playing(NewPlayer))
@@ -90,7 +90,7 @@ player_vs_computer :-
     playing_vs_computer(player1, 0).
 
 
-% Players have 3 moves
+% players have 3 moves
 playing_vs_computer(PlayerTurn, IsComputer) :-
     HaveUsedLevitate is 0,
     display_game(PlayerTurn),
@@ -111,7 +111,7 @@ playing_vs_computer(PlayerTurn, IsComputer) :-
     ( PlayerTurn = player1 -> (NextPlayer = player2, NewIsComputer = 1) ; (NextPlayer = player1, NewIsComputer = 0)),
     playing_vs_computer(NextPlayer, NewIsComputer).
 
-% Check if the turn needs to be changed with computer
+% check if the turn needs to be changed with computer
 check_turn_change_with_computer(NewPlayer, PlayerTurn, Game) :-
     (
         not_inst(Game) -> (NewPlayer = PlayerTurn -> true ; ((NewPlayer = player2 -> NewIsCumputer is 1 ; NewIsComputer is 0), playing_vs_computer(NewPlayer, NewIsCumputer)))
@@ -120,7 +120,7 @@ check_turn_change_with_computer(NewPlayer, PlayerTurn, Game) :-
     ).
 
 
-computer_vs_computer:-
+computer_vs_computer :-
     HaveUsedLevitate is 0,
     display_game(player1),
     next_turn_ai_level1(player1, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation),

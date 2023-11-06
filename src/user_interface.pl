@@ -1,18 +1,19 @@
 :- use_module(library(random)).
 
-/* Board Printing */
 
-% Prints the board and the current player
+% prints the board and the current player
 display_game(PlayerTurn) :-
     player(PlayerTurn),
     print_board,
     nl, write('Current player: '), write(PlayerTurn), nl.
 
-% Prints the board
+
+% prints the board
 print_board :-
     print_rows(1, 14).
 
-% Prints the rows of the board
+
+% prints the rows of the board
 print_rows(X,X).
 print_rows(Row, RowEnd) :-
     Row =< RowEnd,
@@ -21,7 +22,8 @@ print_rows(Row, RowEnd) :-
     NextRow is Row + 1,
     print_rows(NextRow, RowEnd).
 
-% Prints a row of the board
+
+% prints a row of the board
 print_row(_, ColEnd, ColEnd) :- write('|'), nl.
 print_row(Row, Col, ColEnd) :-
     Col =< ColEnd,
@@ -30,11 +32,10 @@ print_row(Row, Col, ColEnd) :-
     NextCol is Col + 1,
     print_row(Row, NextCol, ColEnd).
 
-% Define the way a cell is printed
+
+% define the way a cell is printed
 write_cell(Symbol) :- write('|'), write(Symbol).
 
-
-/* Communicating with user */
 
 next_turn(Player, NewPlayer, Game, HaveUsedLevitate, UsedLevitate, StopLevitation) :-
     ( Player = player1 ->

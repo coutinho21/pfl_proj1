@@ -1,11 +1,11 @@
 :- dynamic cell/3.
-/* Initialize the board */
+
 
 initialize_board :-
-    retractall(cell(_, _, _)), % Cleans the board
+    retractall(cell(_, _, _)), % cleans the board
     assert_board_cells.
 
-% Adds all cells to the board
+% adds all cells to the board
 assert_board_cells :-
     assert_cell(1, 1, '   '), assert_cell(1, 2, '   '), assert_cell(1, 3, ' 1 '), assert_cell(1, 4, ' 2 '), assert_cell(1, 5, ' 3 '), assert_cell(1, 6, ' 4 '), assert_cell(1, 7, ' 5 '), assert_cell(1, 8, ' 6 '), assert_cell(1, 9, ' 7 '), assert_cell(1, 10, ' 8 '), assert_cell(1, 11, ' 9 '), assert_cell(1, 12, '   '), assert_cell(1, 13, '   '),
     assert_cell(2, 1, '   '), assert_cell(2, 2, '   '), assert_cell(2, 3, '   '), assert_cell(2, 4, '   '), assert_cell(2, 5, '   '), assert_cell(2, 6, '   '), assert_cell(2, 7, '|||'), assert_cell(2, 8, '   '), assert_cell(2, 9, '   '), assert_cell(2, 10, '   '), assert_cell(2, 11, '   '), assert_cell(2, 12, '   '), assert_cell(2, 13, '   '),
@@ -23,17 +23,17 @@ assert_board_cells :-
 
 
 
-% Creates a new cell
+% creates a new cell
 assert_cell(Row, Col, Symbol) :-
     assert(cell(Row, Col, Symbol)).
 
-% Removes a cell
+% removes a cell
 retract_cell(Row, Col) :-
     retractall(cell(Row, Col, _)).
 
 /* Board manipulation */
 
-% Set the symbol at a specific cell
+% set the symbol at a specific cell
 set_symbol_at(Row, Col, Symbol) :-
     retractall(cell(Row, Col, _)),
     assert(cell(Row, Col, Symbol)).
