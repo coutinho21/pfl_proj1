@@ -8,9 +8,6 @@
 :- dynamic chosen_rock_position/1.
 
 
-
-
-
 set_actual_rocks(List) :-
     findall(Position, rock_piece('_r_', Position), List).
 
@@ -21,7 +18,7 @@ initialize_players :-
     initialize_pieces.
 
 
-/* Piece manipulation */
+% Piece manipulation
 
 initialize_pieces :-
     assert_player_piece(player1, 'tr1', (8, 6)),
@@ -108,7 +105,6 @@ tr_move(Position, NewPosition, Player, NewPlayer, Game, IsComputer) :-
         ;
         (
             random_select(Options, Choice),
-            write(Choice), nl,
             (
                 (Choice = up, NewRow is Row - 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row + 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'up', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
                 (Choice = down, NewRow is Row + 1, NewCol is Col, NewPosition = (NewRow, NewCol),BackRow is Row - 1, BackCol is Col, BackPosition=(BackRow,BackCol), check_for_rock_pull(Position, ActualRocks, 'down', BackPosition, IsComputer), check_rock_for_throw(NewPosition, ActualRocks, Player, NewPlayer, Game, IsComputer));
@@ -158,15 +154,16 @@ check_tr_options(Position, Options) :-
 
 %checks if there is a rock to pull and asks the player if he wants to pull it
 check_for_rock_pull(Position, ActualRocks, Direction, BackPosition, IsComputer) :-
-    write(ActualRocks), nl,
     (member(BackPosition, ActualRocks)-> 
         (IsComputer = 0 ->
             (
-                write('Do you want to pull the rock? (yes. or no.)'), nl,
+                write('Do you want to pull the rock? '), nl,
+                write('1. Yes'), nl,
+                write('2. No'), nl,
                 read(Answer)
-            ) ; random_select(['yes', 'no'], Answer)
+            ) ; random_select([1,2], Answer)
         ),
-        (Answer = 'yes' -> 
+        (Answer = 1 -> 
             (
                 retract_rock_piece('_r_', BackPosition),
                 assert_rock_piece('_r_', Position)
