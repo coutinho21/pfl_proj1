@@ -12,7 +12,10 @@
 To correctly execute the game in both Linux and Windows environments, follow these steps:
 - Step 1: Install SICStus Prolog 4.8.
 - Step 2: Download the zip file `PFL_TP1_T05_Splut7.zip` and decompress it.
-- Step 3: Inside the directory, consult the file `main.pl` using the command line (typing the command `consult('main.pl').`) or using Sicstus Prolog's UI.
+- Step 3: Move to the `src` directory and inside it consult the file `main.pl` using the command line (typing the command `consult('main.pl').`) or using Sicstus Prolog's UI.
+```pl
+?- consult('main.pl').
+```
 - Step 4: To start the game, run the predicate `play/0`.
 ```pl
 ?- play.
